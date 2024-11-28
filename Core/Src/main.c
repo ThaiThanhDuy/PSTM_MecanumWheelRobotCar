@@ -73,68 +73,61 @@ static void MX_TIM12_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-char command[50];  // Buffer for incoming command
-float v_fl, v_fr, v_bl, v_br;  // Motor speeds
-
-void parse_command(char *cmd) {
-    // Example command: "FL0.50 FR0.50 BL0.50 BR0.50"
-    sscanf(cmd, "FL%f FR%f BL%f BR%f", &v_fl, &v_fr, &v_bl, &v_br);
-    set_motor_pwm(v_fl, v_fr, v_bl, v_br);  // Set motor speeds
+// Buffer for UART communication
+char rxBuffer[100];
+char txBuffer[100];
+void setMotorSpeeds(float FL, float FR, float BL, float BR) {
+    // Implement motor speed control logic here
+    // For example, using PWM signals to control motor drivers
+	printf("cmd: FL:%f FR:%f BL:%f BR:%f", &FL, &FR, &BL, &BR);
 }
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART2) {
-        command[strcspn(command, "\n")] = 0;  // Remove newline character
-        parse_command(command);  // Parse the command
-        HAL_UART_Receive_IT(&huart2, (uint8_t*)command, sizeof(command));  // Continue receiving
-    }
+char P1[20];
+char P2[20];
+char P3[20];
+char P4[20];
+char V1[20];
+char V2[20];
+char V3[20];
+char V4[20];
+void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, float vel2, float vel3, float vel4) {
+    // Prepare joint state message
+    /*sprintf(txBuffer, "pos1:%i vel1:%i pos2:%i vel2:%i pos3:%i vel3:%i pos4:%i vel4:%i\n",
+            pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);*/
+
+    snprintf(P1, sizeof(P1), "pos1:%.1f ", pos1);
+    HAL_UART_Transmit(&huart2, (uint8_t*) P1, strlen(P1), HAL_MAX_DELAY);
+    snprintf(V1, sizeof(V1), "vel1:%.1f ", vel1);
+    HAL_UART_Transmit(&huart2, (uint8_t*) V1, strlen(V1), HAL_MAX_DELAY);
+
+    snprintf(P2, sizeof(P2), "pos2:%.1f ", pos2);
+    HAL_UART_Transmit(&huart2, (uint8_t*) P2, strlen(P2), HAL_MAX_DELAY);
+    snprintf(V2, sizeof(V2), "vel2:%.1f ", vel2);
+    HAL_UART_Transmit(&huart2, (uint8_t*) V2, strlen(V2), HAL_MAX_DELAY);
+
+    snprintf(P3, sizeof(P3), "pos3:%.1f ", pos3);
+    HAL_UART_Transmit(&huart2, (uint8_t*) P3, strlen(P3), HAL_MAX_DELAY);
+    snprintf(V3, sizeof(V3), "vel3:%.1f ", vel3);
+    HAL_UART_Transmit(&huart2, (uint8_t*) V3, strlen(V3), HAL_MAX_DELAY);
+
+    snprintf(P4, sizeof(P4), "pos4:%.1f ", pos4);
+    HAL_UART_Transmit(&huart2, (uint8_t*) P4, strlen(P4), HAL_MAX_DELAY);
+    snprintf(V4, sizeof(V4), "vel4:%.1f ", vel4);
+    HAL_UART_Transmit(&huart2, (uint8_t*) V4, strlen(V4), HAL_MAX_DELAY);
+
+    HAL_Delay(1000); // Delay for 1 second
+
+
 }
 
 
+float value1, value2, value3, value4;
+char buffer[100]; // Buffer to hold the received string
 
-void set_motor_pwm(float fl, float fr, float bl, float br) {
-    // Assume PWM is set between 0 and 1000 for 0-100% duty cycle
-    uint32_t pwm_fl = (uint32_t)(fl * 1000);
-    uint32_t pwm_fr = (uint32_t)(fr * 1000);
-    uint32_t pwm_bl = (uint32_t)(bl * 1000);
-    uint32_t pwm_br = (uint32_t)(br * 1000);
-
-    // Set the PWM values (adjust according to your timer and PWM configuration)
-    __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, pwm_fl);
-    __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, 0);
-
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, pwm_fr);
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
-
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_bl);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
-
-    __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, pwm_br);
-    __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
-
+void UART_ReceiveString(char *buffer, size_t length) {
+	    HAL_UART_Receive(&huart2, (uint8_t *)buffer, length - 1, HAL_MAX_DELAY); // Receive data
+	    buffer[length - 1] = '\0'; // Null-terminate the string
 }
 
-
-void process_command(char* command) {
-    char action;
-    int speed;
-
-    if (sscanf(command, "%c%d", &action, &speed) == 2) {
-        switch (action) {
-            case 'F':
-            	Motor_Control1(1, (uint8_t)speed*1000);
-                break;
-            case 'B':
-            	Motor_Control1(2, (uint8_t)speed*100);
-                break;
-            case 'S':
-            	Motor_Control1(0, (uint8_t)speed);
-                break;
-            default:
-            	Motor_Control1(0, (uint8_t)speed);
-                break;
-        }
-    }
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -187,7 +180,7 @@ int main(void)
 	Reset_Encoder2();
 	Reset_Encoder3();
 	Reset_Encoder4();
-	char command[10];
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -196,6 +189,52 @@ int main(void)
 	while (1) {
     /* USER CODE END WHILE */
 	readEncoder();
+/*	 HAL_UART_Receive(&huart2, (uint8_t *)rxBuffer, sizeof(rxBuffer), HAL_MAX_DELAY);
+
+	        // Parse the command
+	        float FL, FR, BL, BR;
+	        if (sscanf(rxBuffer, "cmd: FL:%f FR:%f BL:%f BR:%f", &FL, &FR, &BL, &BR) == 4) {
+	            // Set motor speeds
+	            setMotorSpeeds(FL, FR, BL, BR);
+	        }*/
+	        // Here you would implement the logic to read the joint states from your encoders or sensors
+    			/*   float pos1 = -1.45 ; // Replace with actual position reading
+	               float pos2 = 10.1; // Replace with actual position reading
+	               float pos3 = 10.2; // Replace with actual position reading
+	               float pos4 = 10.3; // Replace with actual position reading
+	               float vel1 = 10.4; // Replace with actual velocity reading
+	               float vel2 = 10.5; // Replace with actual velocity reading
+	               float vel3 = 10.6; // Replace with actual velocity reading
+	               float vel4 = 10.7; // Replace with actual velocity reading
+
+	               // Send joint state
+	               sendJointState(pos1, pos2, pos3, pos4, vel1, vel2, vel3, vel4);
+
+	               // Clear the buffer for the next command
+	               memset(rxBuffer, 0, sizeof(rxBuffer));*/
+
+	  memset(buffer, 0, sizeof(buffer));
+
+	        // Receive a string from UART
+	        UART_ReceiveString(buffer, sizeof(buffer));
+
+	        // Parse the string
+	        char *token = strtok(buffer, ",");
+	        if (token != NULL) value1 = atof(token); // Convert to float and store
+
+	        token = strtok(NULL, ",");
+	        if (token != NULL) value2 = atof(token); // Convert to float and store
+
+	        token = strtok(NULL, ",");
+	        if (token != NULL) value3 = atof(token); // Convert to float and store
+
+	        token = strtok(NULL, ",");
+	        if (token != NULL) value4 = atof(token); // Convert to float and store
+
+	        // Send back the received values (for verification)
+	        printf("Received: %.2f, %.2f, %.2f, %.2f\n", value1, value2, value3, value4);
+	        HAL_Delay(100);
+
 
     /* USER CODE BEGIN 3 */
 	}
