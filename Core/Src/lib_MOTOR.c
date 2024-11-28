@@ -377,5 +377,5 @@ void run(void){
 	        previous_error = error; // Store the error for the next iteration
 	        printf("%.3f PWM\n",output);
 	        HAL_Delay(TIME_INTERVAL * 1000); // Delay for the time interval
-	   }
+	        }
 
