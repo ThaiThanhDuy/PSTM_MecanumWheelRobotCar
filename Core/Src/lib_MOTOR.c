@@ -378,4 +378,87 @@ void run(void){
 	        printf("%.3f PWM\n",output);
 	        HAL_Delay(TIME_INTERVAL * 1000); // Delay for the time interval
 	        }
+#define COUNTS_PER_REVOLUTION 1441
+#define GEAR_RATIO 131.0
+#define DEGREES_PER_REVOLUTION 360.0
+#define WHEEL_DIAMETER_MM 96.0  // Wheel diameter in mm
+float total_angle;
+float Get_Rotation_Angle(void) {
+    // Get the current encoder count
+    int32_t encoder_count = __HAL_TIM_GET_COUNTER(&htim1);
+
+    // Calculate effective counts per revolution
+    float effective_counts_per_revolution = COUNTS_PER_REVOLUTION / GEAR_RATIO;
+
+    // Calculate degrees per count
+    float degrees_per_count = DEGREES_PER_REVOLUTION / effective_counts_per_revolution;
+
+    // Calculate the total angle rotated
+    return encoder_count * degrees_per_count;
+}
+
+// Function to calculate the distance traveled
+float Get_Distance_Traveled(void) {
+    // Calculate the circumference of the wheel
+    float circumference = M_PI * WHEEL_DIAMETER_MM;  // Circumference in mm
+
+    // Get the total rotation angle
+    total_angle = Get_Rotation_Angle();
+
+    // Calculate the distance traveled based on the angle
+    // Distance = (Angle / 360) * Circumference
+    float distance_traveled_mm = (total_angle / DEGREES_PER_REVOLUTION) * circumference;
+
+     // Convert distance from millimeters to meters
+     float distance_traveled_m = distance_traveled_mm / 1000.0;
+
+     return distance_traveled_m;  // Distance in meters
+}
+
+const int PPR = 1441;  // Pulses per revolution of the encoder
+const double R = 0.48;  // Radius (m)
+const double C = 2 * 3.14159 * R;  // Circumference (m)
+float angularVelocity = 0;  // Angular velocity (rad/s)
+float linearVelocity = 0.0;  // Linear velocity (m/s)
+float position = 0.0;  // Position (m)
+uint32_t lastTime=0;
+uint32_t lastEncoderCount=0;
+int16_t encoderCount;
+float pos1 = 0.0; // Replace with actual position reading
+float pos2 = 0.0; // Replace with actual position reading
+float pos3 = 0.0; // Replace with actual position reading
+float pos4 = 0.0; // Replace with actual position reading
+float vel1 = 0.0; // Replace with actual velocity reading
+float vel2 = 0.0; // Replace with actual velocity reading
+float vel3 = 0.0; // Replace with actual velocity reading
+float vel4 = 0.0; // Replace with actual velocity reading
+
+void  read(void){
+
+	   	   	uint32_t currentTime = HAL_GetTick();  // Current time in milliseconds
+	        uint32_t deltaTime = currentTime - lastTime;  // Time since last measurement (ms)
+
+	        encoderCount = positionMotor1;  // Read the encoder count
+
+	        // Calculate angular velocity (rad/s)
+	        int16_t deltaCount = encoderCount - lastEncoderCount; // New pulses
+	        if (deltaTime > 0) {
+	            angularVelocity = (double)deltaCount / PPR * 2 * 3.14159 / (deltaTime / 1000.0);  // rad/s
+	        } else {
+	            angularVelocity = 0;  // Avoid division by zero
+	        }
+
+	        // Calculate linear velocity (m/s)
+	        linearVelocity = angularVelocity * R;
+
+	        // Calculate position (m)
+	        position = (double)encoderCount / PPR * C;
+
+	        // Update values for the next measurement
+	        lastEncoderCount = encoderCount;
+	        lastTime = currentTime;
+
+	        sendJointState(position, pos2, pos3, pos4, angularVelocity, vel2, vel3, vel4);
+	        HAL_Delay(100);  // Delay for readability
+}
 
