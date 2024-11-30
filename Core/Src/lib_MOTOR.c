@@ -267,7 +267,17 @@ void stopMode(void) {
 	Motor_Control4(0, 0);
 
 }
+void RESET_ALL(void){
+	Reset_Encoder1();
+	Reset_Encoder2();
+	Reset_Encoder3();
+	Reset_Encoder4();
+	Motor_Control1(0, 0);
+	Motor_Control2(0, 0);
+	Motor_Control3(0, 0);
+	Motor_Control4(0, 0);
 
+}
 
 
 // ENCODER
@@ -333,132 +343,125 @@ void readEncoder(void) {
 }*/
 
 
-#define DESIRED_RPM 60.0
-#define TIME_INTERVAL 1.0 // Time interval for speed measurement in seconds
-#define MAX_PWM 1000 // Maximum PWM value
-#define KP 100.0 // Proportional gain (tune this value)
-#define KI 0.5 // Integral gain (tune this value)
-#define KD 1.0 // Derivative gain (tune this value)
-float current_rpm = 0.0;
-float previous_error = 0.0;
-float integral = 0.0;
 
-
-float Calculate_RPM(uint32_t pulses_counted, float time_interval_seconds) {
-    if (time_interval_seconds <= 0) {
-        return 0; // Avoid division by zero
-    }
-    return ((float)pulses_counted / 1441) * (60.0 / time_interval_seconds);
-}
-
-void Set_PWM_Duty_Cycle(uint32_t duty_cycle) {
-    // Set the PWM duty cycle (implementation depends on your PWM setup)
-    Motor_Control1(1, duty_cycle);
-}
-void run(void){
-	uint32_t pulses_counted = positionMotor1;
-	        Reset_Encoder1(); // Reset the counter for the next interval
-
-	        // Calculate current RPM
-	        current_rpm = Calculate_RPM(pulses_counted, TIME_INTERVAL);
-	        printf("%.3f reg/m\n",current_rpm);
-	        // PID Control Logic
-	        float error = DESIRED_RPM - current_rpm;
-	        integral += error * TIME_INTERVAL;
-	        float derivative = (error - previous_error) / TIME_INTERVAL;
-
-	        // Calculate PWM value
-	        float output = (KP * error) + (KI * integral) + (KD * derivative);
-	        if (output > MAX_PWM) output = MAX_PWM; // Limit to max PWM
-	        if (output < 0) output = 0; // Ensure PWM is not negative
-
-	        Set_PWM_Duty_Cycle((uint32_t)output); // Set the PWM duty cycle
-
-	        previous_error = error; // Store the error for the next iteration
-	        printf("%.3f PWM\n",output);
-	        HAL_Delay(TIME_INTERVAL * 1000); // Delay for the time interval
-	        }
-#define COUNTS_PER_REVOLUTION 1441
 #define GEAR_RATIO 131.0
-#define DEGREES_PER_REVOLUTION 360.0
-#define WHEEL_DIAMETER_MM 96.0  // Wheel diameter in mm
-float total_angle;
-float Get_Rotation_Angle(void) {
-    // Get the current encoder count
-    int32_t encoder_count = __HAL_TIM_GET_COUNTER(&htim1);
-
-    // Calculate effective counts per revolution
-    float effective_counts_per_revolution = COUNTS_PER_REVOLUTION / GEAR_RATIO;
-
-    // Calculate degrees per count
-    float degrees_per_count = DEGREES_PER_REVOLUTION / effective_counts_per_revolution;
-
-    // Calculate the total angle rotated
-    return encoder_count * degrees_per_count;
-}
-
-// Function to calculate the distance traveled
-float Get_Distance_Traveled(void) {
-    // Calculate the circumference of the wheel
-    float circumference = M_PI * WHEEL_DIAMETER_MM;  // Circumference in mm
-
-    // Get the total rotation angle
-    total_angle = Get_Rotation_Angle();
-
-    // Calculate the distance traveled based on the angle
-    // Distance = (Angle / 360) * Circumference
-    float distance_traveled_mm = (total_angle / DEGREES_PER_REVOLUTION) * circumference;
-
-     // Convert distance from millimeters to meters
-     float distance_traveled_m = distance_traveled_mm / 1000.0;
-
-     return distance_traveled_m;  // Distance in meters
-}
-
-const int PPR = 1441;  // Pulses per revolution of the encoder
-const double R = 0.48;  // Radius (m)
+const int PPR = 1441;  // Pulses per revolution of the encoder = 11x131(Gear)
+const double R = 0.049;  // Radius (m)
 const double C = 2 * 3.14159 * R;  // Circumference (m)
-float angularVelocity = 0;  // Angular velocity (rad/s)
+float angularVelocity = 0.0;  // Angular velocity (rad/s)
 float linearVelocity = 0.0;  // Linear velocity (m/s)
+float angular_velocity_deg_s=0.0; // Angular velocity (deg/s)
 float position = 0.0;  // Position (m)
 uint32_t lastTime=0;
 uint32_t lastEncoderCount=0;
 int16_t encoderCount;
-float pos1 = 0.0; // Replace with actual position reading
-float pos2 = 0.0; // Replace with actual position reading
-float pos3 = 0.0; // Replace with actual position reading
-float pos4 = 0.0; // Replace with actual position reading
-float vel1 = 0.0; // Replace with actual velocity reading
-float vel2 = 0.0; // Replace with actual velocity reading
-float vel3 = 0.0; // Replace with actual velocity reading
-float vel4 = 0.0; // Replace with actual velocity reading
+uint32_t currentTime;
+#define INTEGRAL_LIMIT 5.0
+// PID variables
+double targetVelocity = 0.5;  // Desired linear velocity
+double error = 0.0;            // Current error
+double integral = 0.0;         // Integral of error
+double lastError = 0.0;        // Last error for derivative calculation
+// PID constants
+#define Kp 1.0     // Proportional gain
+#define Ki 0.1     // Integral gain
+#define Kd 0.01    // Derivative gain
+float controlSignal;
+float lastControlSignal;
+
+// Kalman filter variables
+static double kalmanEstimate = 0.0; // Estimated velocity
+static double kalmanErrorCovariance = 1.0; // Error covariance
+static const double processNoise = 0.01; // Process noise covariance
+static const double measurementNoise = 0.1; // Measurement noise covariance
+float ang =0.0;
+void controlMotor(float velIN,float velTAG,uint32_t deltaTime) {
+	   // Calculate the error
+	    error = velTAG - velIN;
+
+	    // Kalman Filter Prediction Step
+	    // Predict the next state (velocity)
+	    kalmanEstimate = kalmanEstimate; // No control input in this simple example
+	    kalmanErrorCovariance += processNoise; // Update error covariance
+
+	    // Kalman Filter Update Step
+	    // Update the estimate with the new measurement
+	    double kalmanGain = kalmanErrorCovariance / (kalmanErrorCovariance + measurementNoise);
+	    kalmanEstimate += kalmanGain * (velIN - kalmanEstimate); // Update estimate
+	    kalmanErrorCovariance *= (1 - kalmanGain); // Update error covariance
+
+	    // Calculate the integral
+	    integral += error; // Assuming loop runs at a consistent rate
+	    if (integral > INTEGRAL_LIMIT) {
+	        integral = INTEGRAL_LIMIT; // Clamp the integral term
+	    } else if (integral < -INTEGRAL_LIMIT) {
+	        integral = -INTEGRAL_LIMIT; // Clamp the integral term
+	    }
+
+	    // Calculate the derivative
+	    double derivative = (deltaTime > 0) ? (error - lastError) / deltaTime : 0.0;
+
+	    // Apply low-pass filter to the derivative
+	    static double filteredDerivative = 0.0; // Static variable for filtering
+	    const double alpha = 0.1; // Smoothing factor (0 < alpha < 1)
+	    filteredDerivative = alpha * derivative + (1 - alpha) * filteredDerivative;
+
+	    // Calculate the control signal
+	    controlSignal = Kp * error + Ki * integral + Kd * filteredDerivative;
+
+	    // Rate limiting the control signal
+	    const double MAX_CONTROL_SIGNAL_CHANGE = 0.1; // Maximum change per call
+	    if (fabs(controlSignal - lastControlSignal) > MAX_CONTROL_SIGNAL_CHANGE) {
+	        if (controlSignal > lastControlSignal) {
+	            controlSignal = lastControlSignal + MAX_CONTROL_SIGNAL_CHANGE;
+	        } else {
+	            controlSignal = lastControlSignal - MAX_CONTROL_SIGNAL_CHANGE;
+	        }
+	    }
+
+
+	    // Update last error and control signal
+	    lastError = error;
+	    lastControlSignal = controlSignal; // Store the last control signal for rate limiting
+}
 
 void  read(void){
 
-	   	   	uint32_t currentTime = HAL_GetTick();  // Current time in milliseconds
+			currentTime = HAL_GetTick();  // Current time in milliseconds
 	        uint32_t deltaTime = currentTime - lastTime;  // Time since last measurement (ms)
 
-	        encoderCount = positionMotor1;  // Read the encoder count
+	        // Only proceed if at least 100 ms have passed
 
-	        // Calculate angular velocity (rad/s)
-	        int16_t deltaCount = encoderCount - lastEncoderCount; // New pulses
-	        if (deltaTime > 0) {
-	            angularVelocity = (double)deltaCount / PPR * 2 * 3.14159 / (deltaTime / 1000.0);  // rad/s
-	        } else {
-	            angularVelocity = 0;  // Avoid division by zero
-	        }
+	               // Read the encoder count
+	               int32_t encoderCount = Read_Encoder1();  // Read the encoder count
 
-	        // Calculate linear velocity (m/s)
-	        linearVelocity = angularVelocity * R;
+	               // Calculate angular velocity (rad/s)
+	               int16_t deltaCount = encoderCount - lastEncoderCount; // New pulses
+	               if (deltaTime > 0) {
+	                   angularVelocity = (double)deltaCount / PPR * M_PI * 2 / (deltaTime / 1000.0);  // rad/s
+	               } else {
+	                   angularVelocity = 0;  // Avoid division by zero
+	               }
+	               angular_velocity_deg_s = angularVelocity * (180.0f / 3.14159f);
 
-	        // Calculate position (m)
-	        position = (double)encoderCount / PPR * C;
+	               // Calculate linear velocity (m/s)
+	               linearVelocity = angularVelocity * R;
 
-	        // Update values for the next measurement
-	        lastEncoderCount = encoderCount;
-	        lastTime = currentTime;
+	               // Calculate position (m)
+	               position = (double)encoderCount / PPR * C;
+	               ang += angular_velocity_deg_s;
+	               // Update values for the next measurement
+	               lastEncoderCount = encoderCount;
+	               lastTime = currentTime; // Update lastTime to the current time
 
-	        sendJointState(position, pos2, pos3, pos4, angularVelocity, vel2, vel3, vel4);
-	        HAL_Delay(100);  // Delay for readability
+	               // Optional: Send joint state or perform other actions
+	             //  sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
+	              /* if(currentTime>=1215){
+	            	   Motor_Control1(0, 0); // time error
+	               }*/
+	               controlMotor(angularVelocity,0.5,deltaTime );
+
 }
+
+
 

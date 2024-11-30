@@ -1,5 +1,5 @@
 ../Core/Src/lib_DATA.c:34:6:sendJointState	48	static
-../Core/Src/lib_DATA.c:92:6:UART_ReceiveString	16	static
-../Core/Src/lib_DATA.c:96:6:ReadFourFloats	32	static
-../Core/Src/lib_DATA.c:114:6:resetDataSend	8	static
-../Core/Src/lib_DATA.c:129:6:SR	8	static
+../Core/Src/lib_DATA.c:69:6:UART_ReceiveString	16	static
+../Core/Src/lib_DATA.c:83:6:ReadFourFloats	48	static
+../Core/Src/lib_DATA.c:187:6:resetDataSend	8	static
+../Core/Src/lib_DATA.c:202:6:SR	8	static

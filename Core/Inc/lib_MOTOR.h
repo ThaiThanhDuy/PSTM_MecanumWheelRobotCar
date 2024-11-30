@@ -9,8 +9,11 @@
 #include "string.h"
 #include "stdint.h"
 #include "stdio.h"
-#include <lib_UART.h>
 
+#include "math.h"
+
+#include <lib_UART.h>
+#include <lib_DATA.h>
 #ifndef INC_LIB_MOTOR_H_
 #define INC_LIB_MOTOR_H_
 
@@ -27,7 +30,7 @@ void pivotMode(int Mode);
 void pivotSidewayMode(int Mode);
 void rotateMode(int Mode);
 void stopMode(void);
-
+void RESET_ALL(void);
 void Encoder_Init(void);
 int16_t Read_Encoder1(void);
 int16_t Read_Encoder2(void);
@@ -42,7 +45,8 @@ void readEncoder(void);
 //void sendDataEncoder(void);
 void Read_Encoder_Speed();
 
-float Calculate_RPM(uint32_t pulses_counted, float time_interval_seconds);
-void Set_PWM_Duty_Cycle(uint32_t duty_cycle);
-void run(void);
+
+void  read(void);
+void controlMotor(float velIN,float velTAG,uint32_t deltaTime);
+
 #endif /* INC_MOTOR_H_ */

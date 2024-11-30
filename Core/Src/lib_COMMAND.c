@@ -138,5 +138,8 @@ void reviceCommand(uint8_t command) {
 	} else if (command == 'I') {
 		rotateMode(2);
 	}
+	else if (command == 's'){
+		RESET_ALL();
+	}
 
 }
