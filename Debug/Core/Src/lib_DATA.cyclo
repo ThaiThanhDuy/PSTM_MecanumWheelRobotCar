@@ -3,3 +3,8 @@
 ../Core/Src/lib_DATA.c:83:6:ReadFourFloats	7
 ../Core/Src/lib_DATA.c:187:6:resetDataSend	1
 ../Core/Src/lib_DATA.c:202:6:SR	1
+../Core/Src/lib_DATA.c:296:13:read1	5
+../Core/Src/lib_DATA.c:357:13:read2	5
+../Core/Src/lib_DATA.c:417:13:read3	5
+../Core/Src/lib_DATA.c:478:13:read4	5
+../Core/Src/lib_DATA.c:529:6:motor	1

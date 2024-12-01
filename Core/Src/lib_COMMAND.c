@@ -8,7 +8,7 @@
 
 #include "lib_COMMAND.h"
 
-
+/*
 int messageIndex = 0;
 void sendDataStatus(uint8_t status) {
 	const char *messages[] = { "Stop\r\n", "Forward\r\n", "Backward\r\n",
@@ -73,7 +73,7 @@ void sendDataStatus(uint8_t status) {
 
 	UART_SendString((char*) messages[messageIndex]);
 
-}
+}*/
 
 // Just one character
 void reviceCommand(uint8_t command) {

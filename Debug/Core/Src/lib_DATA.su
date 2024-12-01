@@ -3,3 +3,8 @@
 ../Core/Src/lib_DATA.c:83:6:ReadFourFloats	48	static
 ../Core/Src/lib_DATA.c:187:6:resetDataSend	8	static
 ../Core/Src/lib_DATA.c:202:6:SR	8	static
+../Core/Src/lib_DATA.c:296:13:read1	64	static
+../Core/Src/lib_DATA.c:357:13:read2	64	static
+../Core/Src/lib_DATA.c:417:13:read3	64	static
+../Core/Src/lib_DATA.c:478:13:read4	64	static
+../Core/Src/lib_DATA.c:529:6:motor	40	static

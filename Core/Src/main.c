@@ -80,12 +80,73 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 char receivedString[100];
 
+// Define constants
+#define PPR 11  // Pulses per Revolution
+#define SAMPLE_TIME 1  // Sample time in seconds
+#define V 12.0  // Supply Voltage (Volts)
+#define R 1.0   // Armature Resistance (Ohms)
+#define K_e 0.01 // Back EMF Constant (Volts per RPM)
+#define I 1.0   // Rated Current (Amperes)
+#define GEAR_RATIO 131.0 // Gear Ratio (input speed/output speed)
+#define WHEEL_DIAMETER 0.97 // Wheel Diameter (meters)
+#define PWM_DUTY_CYCLE 1000.0 // PWM Duty Cycle (%)
+
+// Global variables
+ uint32_t pulse_count = 0;  // Variable to store pulse count
+float rpm = 0.0;                     // Variable to store calculated RPM
+float linear_velocity = 0.0;         // Variable to store linear velocity (m/s)
+
+float vel=0.0;
+float dia  = 0.097; //(m)
+uint32_t currentTime0;
+float out =0.0;
+float duty_cycle = 0.0;              // Variable to store PWM duty cycle
+
+void set_pwm_duty_cycle(float duty_cycle) {
+    // Convert duty cycle percentage to timer value
+    uint32_t timer_value = (uint32_t)((duty_cycle / 100.0) * (1000-1)); // TIM_PERIOD should be defined based on your timer configuration
+
+    __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 0);
+    		__HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, timer_value);
+}
+void calculate_rpm(void) {
+#define KP 1.0 // Proportional gain
+#define KI 1.0 // Integral gain
+#define KD 0.5 // Derivative gain
+
+	float desired_velocity = 0.2;        // Desired linear velocity (m/s)
+
+	float error = 0.0;                   // Error between desired and actual velocity
+	float integral = 0.0;                // Integral term
+	float derivative = 0.0;              // Derivative term
+	float previous_error = 0.0;          // Previous error for derivative calculation
+	currentTime0 = HAL_GetTick();
+    // Read the current pulse count
+    uint32_t current_pulse_count = __HAL_TIM_GET_COUNTER(&htim1);
+
+    // Calculate RPM
+    rpm = ((current_pulse_count - pulse_count) / (float)PPR) * (60.0);
+
+    // Update the pulse count for the next calculation
+    pulse_count = current_pulse_count;
+
+    vel = (rpm/60.0)*dia*3.14; //Circumference = dia *3.14
+
+      // Set the PWM duty cycle (assuming you have a function to set PWM)
+
+}
+
+
+
+
+
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
+
 int main(void)
 {
 
@@ -96,7 +157,9 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+
+
+	HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -131,7 +194,7 @@ int main(void)
 
 
 
-	Motor_Control1(2, 1000);
+	//Motor_Control1(2, 100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -142,7 +205,8 @@ int main(void)
 	while (1) {
     /* USER CODE END WHILE */
 		readEncoder();
-		read();
+	//	motor();
+		//calculate_rpm();
     /* USER CODE BEGIN 3 */
 	}
   /* USER CODE END 3 */

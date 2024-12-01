@@ -16,7 +16,7 @@
 #define INC_LIB_COMMAND_H_
 
 
-void sendDataStatus(uint8_t status);
+//void sendDataStatus(uint8_t status);
 void reviceCommand(uint8_t command);
 
 #endif /* INC_LIB_COMMAND_H_ */

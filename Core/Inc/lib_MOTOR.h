@@ -13,7 +13,7 @@
 #include "math.h"
 
 #include <lib_UART.h>
-#include <lib_DATA.h>
+//#include <lib_DATA.h>
 #ifndef INC_LIB_MOTOR_H_
 #define INC_LIB_MOTOR_H_
 
@@ -46,7 +46,14 @@ void readEncoder(void);
 void Read_Encoder_Speed();
 
 
-void  read(void);
-void controlMotor(float velIN,float velTAG,uint32_t deltaTime);
+//void read(void);
+float controlMotor1(float velIN,float velTAG,uint32_t deltaTime);
+float controlMotor2(float velIN,float velTAG,uint32_t deltaTime);
+float controlMotor3(float velIN,float velTAG,uint32_t deltaTime);
+float controlMotor4(float velIN,float velTAG,uint32_t deltaTime);
+void controllVel1(float signal);
+void controllVel2(float signal);
+void controllVel3(float signal);
+void controllVel4(float signal);
 
 #endif /* INC_MOTOR_H_ */
