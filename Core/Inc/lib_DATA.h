@@ -20,5 +20,6 @@ void UART_ReceiveString(uint8_t *buffer, size_t length);
 void ReadFourFloats(float *val1, float *val2, float *val3, float *val4);
 void resetDataSend(void);
 void SR(void);
+void calculateVel1(float velTag, float current_time);
 void motor(void);
 #endif /* INC_LIB_DATA_H_ */

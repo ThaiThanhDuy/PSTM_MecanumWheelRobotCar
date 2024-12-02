@@ -83,9 +83,9 @@ void UART_ReceiveString(uint8_t *buffer, size_t length) {
 void ReadFourFloats(float *val1, float *val2, float *val3, float *val4) {
     HAL_Delay(100); // Wait for 100 ms before receiving new data
     UART_ReceiveString(buffer, sizeof(buffer)); // Receive the string from UART
-
+    // c: 0.15,0.15,0.15,0.15
     // Print the received buffer for debugging
-    printf("Received buffer: %s\n", buffer);
+ //   printf("Received buffer: %s\n", buffer);
 
     // Pointer to the start of the buffer
     char *start = (char *)buffer;
@@ -102,41 +102,42 @@ void ReadFourFloats(float *val1, float *val2, float *val3, float *val4) {
         }
 
         // Print the data after the prefix for debugging
-        printf("Data after prefix: %s\n", data);
+    //    printf("Data after prefix: %s\n", data);
 
         // Parse the string
         char *token = strtok(data, ",");
         if (token != NULL) {
             *val1 = atof(token); // Convert to float and store
-            printf("Parsed val1: %.2f\n", *val1);
+ //           printf("Parsed val1: %.2f\n", *val1);
         }
 
         token = strtok(NULL, ",");
         if (token != NULL) {
             *val2 = atof(token); // Convert to float and store
-            printf("Parsed val2: %.2f\n", *val2);
+     //       printf("Parsed val2: %.2f\n", *val2);
         }
 
         token = strtok(NULL, ",");
         if (token != NULL) {
             *val3 = atof(token); // Convert to float and store
-            printf("Parsed val3: %.2f\n", *val3);
+    //        printf("Parsed val3: %.2f\n", *val3);
         }
 
         token = strtok(NULL, ",");
         if (token != NULL) {
             *val4 = atof(token); // Convert to float and store
-            printf("Parsed val4: %.2f\n", *val4);
+    //        printf("Parsed val4: %.2f\n", *val4);
         }
 
         // Sum the values
-        float sum = *val1 + *val2 + *val3 + *val4;
-        printf("Sum of values: %.2f\n", sum);
+ //       float sum = *val1 + *val2 + *val3 + *val4;
+   //     printf("Sum of values: %.2f\n", sum);
 
         // Move the start pointer to the end of the current message for the next iteration
         start = end;
     }
 }
+
 /*void UART_ReceiveString(uint8_t *buffer, size_t length) {
     HAL_UART_Receive(&huart2, buffer, length - 1, 256); // Receive data with a timeout of 256 ms
     buffer[length - 1] = '\0'; // Null-terminate the string
@@ -214,13 +215,8 @@ void SR(void){
     sendJointState(pos1, pos2, pos3, pos4, vel1, vel2, vel3, vel4);
 
 }
-#define GEAR_RATIO 131.0
-const int PPR = 11;  // Pulses per revolution of the encoder = 11x131(Gear)
-const double R = 0.049;  // Radius (m)
-const double C = 2 * 3.14159 * R;  // Circumference (m)
 
-
-uint32_t currentTime;
+uint32_t time;
 
 typedef struct {
     float position;
@@ -239,60 +235,8 @@ typedef struct {
     float angularVelocity;
 }JointState4;
 
-float angularVelocity1 = 0.0;  // Angular velocity (rad/s)
-float linearVelocity1 = 0.0;  // Linear velocity (m/s)
-float angular_velocity_deg_s1=0.0; // Angular velocity (deg/s)
-float position1 = 0.0;  // Position (m)
-float ang1 =0.0;
-uint32_t lastTime1=0;
-uint32_t lastEncoderCount1=0;
-int16_t encoderCount1;
-uint32_t currentTime1;
 
-/*JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
-    JointState1 jointState1;
-
-    currentTime1 = time;  // Current time in milliseconds
-    uint32_t deltaTime1 = currentTime1 - lastTime1;  // Time since last measurement (ms)
-
-    // Only proceed if at least 100 ms have passed
-    if (deltaTime1 >= 100) {
-
-        // Read the encoder count
-        int32_t encoderCount1 = Read_Encoder1();  // Read the encoder count
-
-        // Calculate angular velocity (rad/s)
-        int16_t deltaCount1 = encoderCount1 - lastEncoderCount1; // New pulses
-        if (deltaTime1 > 0) {
-            angularVelocity1 = (double)deltaCount1 / PPR * M_PI * 2 / (deltaTime1 / 1000.0);  // rad/s
-        } else {
-            angularVelocity1 = 0;  // Avoid division by zero
-        }
-        angular_velocity_deg_s1 = angularVelocity1 * (180.0f / 3.14159f);
-
-        // Calculate linear velocity (m/s)
-        linearVelocity1 = angularVelocity1 * R;
-
-        // Calculate position (m)
-        position1 = (double)encoderCount1 / PPR * C;
-        ang1 += angular_velocity_deg_s1;
-
-        // Update values for the next measurement
-        lastEncoderCount1 = encoderCount1;
-        lastTime1 = currentTime1; // Update lastTime to the current time
-
-        // Optional: Send joint state or perform other actions
-        // sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
-         if(currentTime>=1215){
-            Motor_Control1(0, 0); // time error
-        }
-        controllVel1(controlMotor1(angularVelocity1,*desiredAngularVelocity1,deltaTime1 ));
-        jointState1.position = position1;
-        jointState1.angularVelocity = angularVelocity1;
-    }
-
-    return jointState1;
-}*/
+/*
 JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
     JointState1 jointState1;
 
@@ -328,9 +272,9 @@ JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
 
         // Optional: Send joint state or perform other actions
         // sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
-        /* if(currentTime>=1215){
+         if(currentTime>=1215){
             Motor_Control1(0, 0); // time error
-        }*/
+        }
         if(angularVelocity1>1){
         	angularVelocity1 = 1;
         }
@@ -343,202 +287,208 @@ JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
     }
 
     return jointState1;
-}
-float angularVelocity2 = 0.0;  // Angular velocity (rad/s)
-float linearVelocity2 = 0.0;  // Linear velocity (m/s)
-float angular_velocity_deg_s2=0.0; // Angular velocity (deg/s)
-float position2 = 0.0;  // Position (m)
-float ang2 =0.0;
-uint32_t lastTime2=0;
-uint32_t lastEncoderCount2=0;
-int16_t encoderCount2;
-uint32_t currentTime2;
+}*/
 
-JointState2 read2( float* desiredAngularVelocity2,uint32_t time) {
-    JointState2 jointState2;
 
-    currentTime2 = time;  // Current time in milliseconds
-    uint32_t deltaTime2 = currentTime2 - lastTime2;  // Time since last measurement (ms)
+#include <stdio.h>
+#include <math.h>
+#include <stdint.h>
 
-    // Only proceed if at least 100 ms have passed
-    if (deltaTime2 >= 100) {
+#define MOVING_AVERAGE_SIZE 5 // Size for moving average filter
+#define PPR 11 // Pulses per revolution
+#define MAX_VELOCITY 0.27 // Maximum linear velocity in m/s
+#define MAX_PWM_VALUE 1000 // Maximum PWM value (based on TIM12 period)
+#define MAX_INTEGRAL 100.0 // Maximum integral value to prevent windup
+#define SMOOTHING_FACTOR 0.2 // Adjusted factor for low-pass filter for quicker response
+#define RATE_LIMIT 10.0 // Maximum change in control output per cycle
+#define VELOCITY_CHANGE_THRESHOLD 0.1 // Threshold for sudden velocity change
+#define VELOCITY_PROXIMITY_THRESHOLD 0.02 // Threshold for proximity to desired velocity
 
-        // Read the encoder count
-        int32_t encoderCount2 = Read_Encoder2();  // Read the encoder count
+// Global variables
+uint32_t pulse_count = 0;  // Variable to store pulse count
+double rpm = 0.0;           // Variable to store calculated RPM
+float vel = 0.0;           // Linear velocity (m/s)
+float dia = 0.097;         // Diameter in meters
 
-        // Calculate angular velocity (rad/s)
-        int16_t deltaCount2 = encoderCount2 - lastEncoderCount2; // New pulses
-        int16_t rpm2 = deltaCount2 / PPR;
-        if (deltaTime2 > 0) {
-            angularVelocity2 =  (double)  rpm2  /  M_PI * 2 / (deltaTime2 / 1000.0);  // rad/s
-        } else {
-            angularVelocity2 = 0;  // Avoid division by zero
-        }
-        angular_velocity_deg_s2 = angularVelocity2 * (180.0f / 3.14159f);
+float Kp = 0.11;            // Proportional gain
+float Ki = 0.0065;          // Integral gain
+float Kd = 0.25;            // Derivative gain
+float control_output;      // Control output for PWM
+float integral1 = 0.0;     // Integral term for PID
+float last_error = 0.0;    // Last error for PID
+float last_control_output = 0.0; // Last control output for smoothing
+float last_valid_vel = 0.0; // Last valid velocity
 
-        // Calculate linear velocity (m/s)
-        linearVelocity2 = angularVelocity2 * R;
+// Kalman filter variables
+float kalman_gain = 0.1; // Initial Kalman gain
+float estimate = 0.0;     // Initial estimate of velocity
+float error_covariance = 1.0; // Initial error covariance
+float process_noise = 0.1; // Process noise covariance
+float measurement_noise = 0.1; // Measurement noise covariance
 
-        // Calculate position (m)
-        position2 = (double)encoderCount2 / PPR * C;
-        ang2 += angular_velocity_deg_s2;
+// Moving average buffer
+float velocity_buffer[MOVING_AVERAGE_SIZE] = {0};
+int buffer_index = 0;
+ float last_time = 0.0; // Variable to store the last time update
+ float angular_position_rad = 0.0; // Angular position in radians
+ float angular_position_deg = 0.0; // Angular position in degrees
+ float realVel ;
+  float realRPM ;
+// Function to calculate moving average
+float moving_average_filter(float new_velocity) {
+    velocity_buffer[buffer_index] = new_velocity;
+    buffer_index = (buffer_index + 1) % MOVING_AVERAGE_SIZE;
 
-        // Update values for the next measurement
-        lastEncoderCount2 = encoderCount2;
-        lastTime2 = currentTime2; // Update lastTime to the current time
-
-        // Optional: Send joint state or perform other actions
-        // sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
-        /* if(currentTime>=1215){
-            Motor_Control1(0, 0); // time error
-        }*/
-        if(angularVelocity2>1){
-                	angularVelocity2 = 1;
-                }
-                else if (angularVelocity2< -1){
-                	angularVelocity2 = -1;
-                }
-        controllVel2(controlMotor2(angularVelocity2,*desiredAngularVelocity2,deltaTime2 ));
-        jointState2.position = position2;
-        jointState2.angularVelocity = angularVelocity2;
+    float sum = 0.0;
+    for (int i = 0; i < MOVING_AVERAGE_SIZE; i++) {
+        sum += velocity_buffer[i];
     }
-
-    return jointState2;
-}
-float angularVelocity3 = 0.0;  // Angular velocity (rad/s)
-float linearVelocity3 = 0.0;  // Linear velocity (m/s)
-float angular_velocity_deg_s3=0.0; // Angular velocity (deg/s)
-float position3 = 0.0;  // Position (m)
-float ang3 =0.0;
-uint32_t lastTime3=0;
-uint32_t lastEncoderCount3=0;
-int16_t encoderCount3;
-uint32_t currentTime3;
-JointState3 read3( float* desiredAngularVelocity3,uint32_t time) {
-    JointState3 jointState3;
-
-    currentTime3 = time;  // Current time in milliseconds
-    uint32_t deltaTime3 = currentTime3 - lastTime3;  // Time since last measurement (ms)
-
-    // Only proceed if at least 100 ms have passed
-    if (deltaTime3 >= 100) {
-
-        // Read the encoder count
-        int32_t encoderCount3 = Read_Encoder3();  // Read the encoder count
-
-        // Calculate angular velocity (rad/s)
-        int16_t deltaCount3 = encoderCount3 - lastEncoderCount3; // New pulses
-        int16_t rpm3 = deltaCount3 / PPR;
-        if (deltaTime3 > 0) {
-                  angularVelocity3 =  (double)  rpm3  /  M_PI * 2 / (deltaTime3 / 1000.0);  // rad/s
-        } else {
-            angularVelocity3 = 0;  // Avoid division by zero
-        }
-        angular_velocity_deg_s3 = angularVelocity3 * (180.0f / 3.14159f);
-
-        // Calculate linear velocity (m/s)
-        linearVelocity3 = angularVelocity3 * R;
-
-        // Calculate position (m)
-        position3 = (double)encoderCount3 / PPR * C;
-        ang3 += angular_velocity_deg_s3;
-
-        // Update values for the next measurement
-        lastEncoderCount3 = encoderCount3;
-        lastTime3 = currentTime3; // Update lastTime to the current time
-
-        // Optional: Send joint state or perform other actions
-        // sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
-        /* if(currentTime>=1215){
-            Motor_Control1(0, 0); // time error
-        }*/
-        if(angularVelocity3>1){
-                	angularVelocity3 = 1;
-                }
-                else if (angularVelocity3< -1){
-                	angularVelocity3 = -1;
-                }
-        controllVel3(controlMotor3(angularVelocity3,*desiredAngularVelocity3,deltaTime3 ));
-        jointState3.position = position3;
-        jointState3.angularVelocity = angularVelocity3;
-    }
-
-    return jointState3;
+    return sum / MOVING_AVERAGE_SIZE;
 }
 
-float angularVelocity4 = 0.0;  // Angular velocity (rad/s)
-float linearVelocity4 = 0.0;  // Linear velocity (m/s)
-float angular_velocity_deg_s4=0.0; // Angular velocity (deg/s)
-float position4 = 0.0;  // Position (m)
-float ang4 =0.0;
-uint32_t lastTime4=0;
-uint32_t lastEncoderCount4=0;
-int16_t encoderCount4;
-uint32_t currentTime4;
-JointState4 read4( float* desiredAngularVelocity4,uint32_t time) {
-    JointState4 jointState4;
+// Function to calculate PWM duty cycle based on desired velocity
+float calculate_pwm(float desired_velocity) {
+    if (desired_velocity > MAX_VELOCITY) {
+        desired_velocity = MAX_VELOCITY; // Limit to max velocity
+    }
+    if (desired_velocity < -MAX_VELOCITY) {
+        desired_velocity = -MAX_VELOCITY; // Limit to min velocity
+    }
+    return (desired_velocity / MAX_VELOCITY) * MAX_PWM_VALUE; // Scale to PWM range
+}
 
-    currentTime4 = time;  // Current time in milliseconds
-    uint32_t deltaTime4 = currentTime4 - lastTime4;  // Time since last measurement (ms)
+// PID Controller Function with Anti-Windup
+float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value) {
+    // Calculate the error
+    float error = setpoint - measured_value;
 
-    // Only proceed if at least 100 ms have passed
-    if (deltaTime4 >= 100) {
-
-        // Read the encoder count
-        int32_t encoderCount4 = Read_Encoder4();  // Read the encoder count
-
-        // Calculate angular velocity (rad/s)
-        int16_t deltaCount4 = encoderCount4 - lastEncoderCount4; // New pulses
-        int16_t rpm4 = deltaCount4 / PPR;
-        if (deltaTime4 > 0) {
-                  angularVelocity4 =  (double)  rpm4  /  M_PI * 2 / (deltaTime4 / 1000.0);  // rad/s
-        } else {
-            angularVelocity4 = 0;  // Avoid division by zero
-        }
-        angular_velocity_deg_s4 = angularVelocity4 * (180.0f / 3.14159f);
-
-        // Calculate linear velocity (m/s)
-        linearVelocity4 = angularVelocity4 * R;
-
-        // Calculate position (m)
-        position4 = (double)encoderCount4 / PPR * C;
-        ang4 += angular_velocity_deg_s4;
-
-        // Update values for the next measurement
-        lastEncoderCount4 = encoderCount4;
-        lastTime4 = currentTime4; // Update lastTime to the current time
-
-        // Optional: Send joint state or perform other actions
-        // sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
-        /* if(currentTime>=1215){
-            Motor_Control1(0, 0); // time error
-        }*/
-        if(angularVelocity4>1){
-                	angularVelocity4 = 1;
-                }
-                else if (angularVelocity4< -1){
-                	angularVelocity4 = -1;
-                }
-        controllVel4(controlMotor4(angularVelocity4,*desiredAngularVelocity4,deltaTime4 ));
-        jointState4.position = position4;
-        jointState4.angularVelocity = angularVelocity4;
+    // Update the integral term with clamping to prevent windup
+    *integral += error;
+    if (*integral > MAX_INTEGRAL) {
+        *integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+    } else if (*integral < -MAX_INTEGRAL) {
+        *integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
     }
 
-    return jointState4;
+    // Calculate the derivative term
+    float derivative = error - last_error;
+
+    // Calculate the output
+    float output = (Kp * error) + (Ki * (*integral)) + (Kd * derivative);
+
+    return output; // Return the control output
+}
+
+// Function to calculate RPM and control the motor
+void calculateVel1(float velTag, float current_time) {
+    // Debugging output
+
+
+
+    static float distance_traveled = 0.0;
+    static int32_t current_pulse_count = 0;
+
+    // Calculate the time elapsed since the last update
+    float delta_time = current_time - last_time;
+
+    // Read the current pulse count
+    current_pulse_count = Read_Encoder1();
+
+    HAL_Delay(100);
+
+    // Calculate the difference in pulse count
+    int32_t pulse_difference = current_pulse_count - pulse_count;
+
+
+    // Calculate RPM as a positive value
+    rpm = fabs((float)pulse_difference / (float)PPR) * 60.0; // Always positive
+    pulse_count = current_pulse_count;
+
+    // Calculate linear velocity (m/s)
+    float new_vel;
+    if (pulse_difference < 0) {
+        new_vel = -((rpm / 60.0) * dia * M_PI); // Negative velocity for reverse direction
+    } else {
+        new_vel = (rpm / 60.0) * dia * M_PI; // Positive velocity for forward direction
+    }
+
+    // Apply moving average filter for velocity
+    vel = moving_average_filter(new_vel);
+
+    // Update position based on velocity and elapsed time
+    distance_traveled = vel * (delta_time / 1000.0); // Linear distance traveled in meters
+    angular_position_rad += distance_traveled / (dia / 2.0); // Update angular position in radians
+    angular_position_deg = angular_position_rad * (180.0 / M_PI); // Convert to degrees
+
+    // Kalman filter update
+    estimate = estimate; // Predicted state (previous estimate)
+    error_covariance += process_noise; // Update error covariance
+
+    // Measurement update
+    kalman_gain = error_covariance / (error_covariance + measurement_noise); // Calculate Kalman gain
+    estimate += kalman_gain * (vel - estimate); // Update estimate with measurement
+    error_covariance *= (1 - kalman_gain); // Update error covariance
+
+    // Use the Kalman filter estimate for velocity
+    float filtered_vel = estimate;
+
+    // Check for sudden changes in velocity with deadband
+    if (fabs(filtered_vel - last_valid_vel) > VELOCITY_CHANGE_THRESHOLD) {
+        vel = last_valid_vel; // Ignore sudden change, retain last valid velocity
+    } else {
+        vel = filtered_vel; // Update velocity if change is within threshold
+        last_valid_vel = vel; // Update last valid velocity
+    }
+
+    // Calculate control output using PID controller
+    control_output = PID_Controller(Kp, Ki, Kd, &integral1, last_error, velTag, vel);
+
+
+    // Maintain control output if within proximity threshold
+    if (fabs(vel - velTag) < VELOCITY_PROXIMITY_THRESHOLD) {
+        control_output = last_control_output; // Retain last control output
+    }
+
+    // Apply low-pass filter to smooth control output
+    control_output = (SMOOTHING_FACTOR * control_output) + ((1 - SMOOTHING_FACTOR) * last_control_output);
+
+    // Rate limit the control output to prevent sudden changes
+    float output_change = control_output - last_control_output;
+    if (output_change > RATE_LIMIT) {
+        control_output = last_control_output + RATE_LIMIT; // Limit increase
+    } else if (output_change < -RATE_LIMIT) {
+        control_output = last_control_output - RATE_LIMIT; // Limit decrease
+    }
+
+    last_control_output = control_output; // Update last control output
+    realVel = vel / 2.0; // Scale factor
+    realRPM = rpm / 2.0;
+
+    // Set the PWM duty cycle based on the sign of desired_velocity
+    if (velTag > 0) {
+        Motor_Control1(2, calculate_pwm(control_output)); // Positive velocity
+    } else if (velTag < 0) {
+        Motor_Control1(1, calculate_pwm(control_output)); // Negative velocity
+    }
+
+    // Update the last time for the next calculation
+    last_time = current_time; // Store the current time for the next update
 }
 void motor(void){
-	  ReadFourFloats(&value1, &value2, &value3, &value4);
-	  currentTime = HAL_GetTick();
-	  HAL_Delay(1);
-	  JointState1 jointState1 = read1(&value1,currentTime);
-	  JointState2 jointState2 = read2(&value2,currentTime);
-	  JointState3 jointState3 = read3(&value3,currentTime);
-	  JointState4 jointState4 = read4(&value4,currentTime);
 
+	 // ReadFourFloats(&value1, &value2, &value3, &value4);
+	  HAL_Delay(100);
+	  time = HAL_GetTick();
 	  HAL_Delay(1);
-	 /* sendJointState(jointState1.position, jointState2.position, jointState3.position, jointState4.position,
-	 			  jointState1.angularVelocity,  jointState2.angularVelocity,  jointState3.angularVelocity,  jointState4.angularVelocity);*/
-	  sendJointState(jointState1.position,jointState2.position,  jointState3.position, jointState4.position,
+	 // JointState1 jointState1 = calculateVel1(0., time);
+	  //JointState2 jointState2 = read2(&value2,currentTime);
+	  //JointState3 jointState3 = read3(&value3,currentTime);
+	  //JointState4 jointState4 = read4(&value4,currentTime);
+	//  calculateVel1(0.54, time);
+	  HAL_Delay(1);
+	// sendJointState(angular_position_rad, 0.0, 0.0, 0.0,
+			// realVel,  0.27,  0.27,  0.27);
+	/*  sendJointState(jointState1.position,jointState2.position,  jointState3.position, jointState4.position,
  jointState1.angularVelocity, jointState2.angularVelocity,   jointState3.angularVelocity, jointState4.angularVelocity);
-	  HAL_Delay(10);
+	  HAL_Delay(10);*/
 }
