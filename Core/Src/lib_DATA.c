@@ -28,7 +28,9 @@ float vel1 = 0.0; // Replace with actual velocity reading
 float vel2 = 0.0; // Replace with actual velocity reading
 float vel3 = 0.0; // Replace with actual velocity reading
 float vel4 = 0.0; // Replace with actual velocity reading
-
+uint8_t buffer[30]; // Buffer to hold the received string
+float value1, value2, value3, value4;
+float oldValue1, oldValue2 ,oldValue3,oldValue4;
 /// SEND DATA
 
 void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, float vel2, float vel3, float vel4) {
@@ -36,9 +38,9 @@ void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, 
     /*sprintf(txBuffer, "pos1:%i vel1:%i pos2:%i vel2:%i pos3:%i vel3:%i pos4:%i vel4:%i\n",
             pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);*/
 
-    snprintf(P1, sizeof(P1), "pos1:%.6f ", pos1);
+   /* snprintf(P1, sizeof(P1), "pos1:%.2f ", pos1);
     HAL_UART_Transmit(&huart2, (uint8_t*) P1, strlen(P1), HAL_MAX_DELAY);
-    snprintf(V1, sizeof(V1), "vel1:%.6f ", vel1);
+    snprintf(V1, sizeof(V1), "vel1:%.2f ", vel1);
     HAL_UART_Transmit(&huart2, (uint8_t*) V1, strlen(V1), HAL_MAX_DELAY);
 
     snprintf(P2, sizeof(P2), "pos2:%.2f ", pos2);
@@ -56,15 +58,23 @@ void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, 
     snprintf(V4, sizeof(V4), "vel4:%.2f ", vel4);
     HAL_UART_Transmit(&huart2, (uint8_t*) V4, strlen(V4), HAL_MAX_DELAY);
 
-    HAL_Delay(1000); // Delay for 1 second
+    HAL_Delay(100)*/;
+    // Prepare a buffer to hold the complete joint state message
+       char txBuffer[256]; // Ensure this buffer is large enough to hold the entire message
 
+       // Format the joint state message into the buffer
+       snprintf(txBuffer, sizeof(txBuffer), "pos1:%.2f vel1:%.2f pos2:%.2f vel2:%.2f pos3:%.2f vel3:%.2f pos4:%.2f vel4:%.2f\n",
+                pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);
 
+       // Transmit the complete message over UART
+       HAL_UART_Transmit(&huart2, (uint8_t*)txBuffer, strlen(txBuffer), HAL_MAX_DELAY);
+
+       // Optional delay to prevent flooding the UART
+       HAL_Delay(100);
 }
 
 /// REVICE DATA
-float value1, value2, value3, value4;
 
-uint8_t buffer[30]; // Buffer to hold the received string
 
 void UART_ReceiveString(uint8_t *buffer, size_t length) {
     // Clear the buffer before receiving new data
@@ -81,61 +91,73 @@ void UART_ReceiveString(uint8_t *buffer, size_t length) {
 
 // Function to read four float values from a received string
 void ReadFourFloats(float *val1, float *val2, float *val3, float *val4) {
-    HAL_Delay(100); // Wait for 100 ms before receiving new data
-    UART_ReceiveString(buffer, sizeof(buffer)); // Receive the string from UART
-    // c: 0.15,0.15,0.15,0.15
-    // Print the received buffer for debugging
- //   printf("Received buffer: %s\n", buffer);
+	HAL_Delay(100); // Wait for 100 ms before receiving new data
+	UART_ReceiveString(buffer, sizeof(buffer)); // Receive the string from UART
+	// Example input: "c: 0.15,0.15,0.15,0.15"
 
-    // Pointer to the start of the buffer
-    char *start = (char *)buffer;
+	// Print the received buffer for debugging
+	printf("Received buffer: %s\n", buffer);
 
-    // Loop to find and process all valid messages
-    while ((start = strstr(start, "c:")) != NULL) {
-        // Move the pointer past "c:"
-        char *data = start + 2;
+	// Pointer to the start of the buffer
+	char *start = (char *)buffer;
 
-        // Find the end of the message (next 'c:' or end of buffer)
-        char *end = strstr(data, "c:");
-        if (end != NULL) {
-            *end = '\0'; // Temporarily terminate the string for parsing
-        }
+	// Loop to find and process all valid messages
+	while ((start = strstr(start, "c:")) != NULL) {
+	    // Move the pointer past "c:"
+	    char *data = start + 2;
 
-        // Print the data after the prefix for debugging
-    //    printf("Data after prefix: %s\n", data);
+	    // Find the end of the message (next 'c:' or end of buffer)
+	    char *end = strstr(data, "c:");
+	    if (end != NULL) {
+	        *end = '\0'; // Temporarily terminate the string for parsing
+	    }
 
-        // Parse the string
-        char *token = strtok(data, ",");
-        if (token != NULL) {
-            *val1 = atof(token); // Convert to float and store
- //           printf("Parsed val1: %.2f\n", *val1);
-        }
+	    // Print the data after the prefix for debugging
+	    printf("Data after prefix: %s\n", data);
 
-        token = strtok(NULL, ",");
-        if (token != NULL) {
-            *val2 = atof(token); // Convert to float and store
-     //       printf("Parsed val2: %.2f\n", *val2);
-        }
+	    // Parse the string
+	    char *token = strtok(data, ",");
+	    float newValue1, newValue2, newValue3, newValue4; // Store new values
 
-        token = strtok(NULL, ",");
-        if (token != NULL) {
-            *val3 = atof(token); // Convert to float and store
-    //        printf("Parsed val3: %.2f\n", *val3);
-        }
+	    if (token != NULL) {
+	        newValue1 = atof(token); // Convert to float
+	    //    printf("Parsed val1: %.2f\n", newValue1);
+	    }
 
-        token = strtok(NULL, ",");
-        if (token != NULL) {
-            *val4 = atof(token); // Convert to float and store
-    //        printf("Parsed val4: %.2f\n", *val4);
-        }
+	    token = strtok(NULL, ",");
+	    if (token != NULL) {
+	        newValue2 = atof(token); // Convert to float
+	        printf("Parsed val2: %.2f\n", newValue2);
+	    }
 
-        // Sum the values
- //       float sum = *val1 + *val2 + *val3 + *val4;
-   //     printf("Sum of values: %.2f\n", sum);
+	    token = strtok(NULL, ",");
+	    if (token != NULL) {
+	        newValue3 = atof(token); // Convert to float
+	    //    printf("Parsed val3: %.2f\n", newValue3);
+	    }
 
-        // Move the start pointer to the end of the current message for the next iteration
-        start = end;
-    }
+	    token = strtok(NULL, ",");
+	    if (token != NULL) {
+	        newValue4 = atof(token); // Convert to float
+	       // printf("Parsed val4: %.2f\n", newValue4);
+	    }
+
+	    // Check if new values are different from old values
+	    if (newValue1 != oldValue1 || newValue2 != oldValue2 || newValue3 != oldValue3 || newValue4 != oldValue4) {
+	        *val1 = newValue1;
+	        *val2 = newValue2;
+	        *val3 = newValue3;
+	        *val4 = newValue4;
+
+	        oldValue1 = newValue1;
+	        oldValue2 = newValue2;
+	        oldValue3 = newValue3;
+	        oldValue4 = newValue4;
+	    }
+
+	    // Move the start pointer to the end of the current message for the next iteration
+	    start = end;
+	}
 }
 
 /*void UART_ReceiveString(uint8_t *buffer, size_t length) {
@@ -218,23 +240,6 @@ void SR(void){
 
 uint32_t time;
 
-typedef struct {
-    float position;
-    float angularVelocity;
-}JointState1;
-typedef struct {
-    float position;
-    float angularVelocity;
-}JointState2;
-typedef struct {
-    float position;
-    float angularVelocity;
-}JointState3;
-typedef struct {
-    float position;
-    float angularVelocity;
-}JointState4;
-
 
 /*
 JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
@@ -290,10 +295,6 @@ JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
 }*/
 
 
-#include <stdio.h>
-#include <math.h>
-#include <stdint.h>
-
 #define MOVING_AVERAGE_SIZE 5 // Size for moving average filter
 #define PPR 11 // Pulses per revolution
 #define MAX_VELOCITY 0.27 // Maximum linear velocity in m/s
@@ -301,23 +302,25 @@ JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
 #define MAX_INTEGRAL 100.0 // Maximum integral value to prevent windup
 #define SMOOTHING_FACTOR 0.2 // Adjusted factor for low-pass filter for quicker response
 #define RATE_LIMIT 10.0 // Maximum change in control output per cycle
-#define VELOCITY_CHANGE_THRESHOLD 0.1 // Threshold for sudden velocity change
+#define VELOCITY_CHANGE_THRESHOLD 0.54 // Threshold for sudden velocity change
 #define VELOCITY_PROXIMITY_THRESHOLD 0.02 // Threshold for proximity to desired velocity
+#define STOP_DURATION 100 // Duration to stop the motor in milliseconds
 
 // Global variables
 uint32_t pulse_count = 0;  // Variable to store pulse count
 double rpm = 0.0;           // Variable to store calculated RPM
-float vel = 0.0;           // Linear velocity (m/s)
-float dia = 0.097;         // Diameter in meters
+float vel = 0.0;            // Linear velocity (m/s)
+float dia = 0.097;          // Diameter in meters
 
-float Kp = 0.11;            // Proportional gain
-float Ki = 0.0065;          // Integral gain
+float Kp = 0.15;             // Proportional gain
+float Ki = 0.01;            // Integral gain
 float Kd = 0.25;            // Derivative gain
-float control_output;      // Control output for PWM
-float integral1 = 0.0;     // Integral term for PID
-float last_error = 0.0;    // Last error for PID
+float control_output;       // Control output for PWM
+float integral1 = 0.0;      // Integral term for PID
+float last_error = 0.0;     // Last error for PID
 float last_control_output = 0.0; // Last control output for smoothing
 float last_valid_vel = 0.0; // Last valid velocity
+float last_velTag = 0.0;    // Store the last velTag
 
 // Kalman filter variables
 float kalman_gain = 0.1; // Initial Kalman gain
@@ -329,11 +332,12 @@ float measurement_noise = 0.1; // Measurement noise covariance
 // Moving average buffer
 float velocity_buffer[MOVING_AVERAGE_SIZE] = {0};
 int buffer_index = 0;
- float last_time = 0.0; // Variable to store the last time update
- float angular_position_rad = 0.0; // Angular position in radians
- float angular_position_deg = 0.0; // Angular position in degrees
- float realVel ;
-  float realRPM ;
+float last_time = 0.0; // Variable to store the last time update
+float angular_position_rad = 0.0; // Angular position in radians
+float angular_position_deg = 0.0; // Angular position in degrees
+float realVel;
+float realRPM;
+
 // Function to calculate moving average
 float moving_average_filter(float new_velocity) {
     velocity_buffer[buffer_index] = new_velocity;
@@ -348,11 +352,8 @@ float moving_average_filter(float new_velocity) {
 
 // Function to calculate PWM duty cycle based on desired velocity
 float calculate_pwm(float desired_velocity) {
-    if (desired_velocity > MAX_VELOCITY) {
-        desired_velocity = MAX_VELOCITY; // Limit to max velocity
-    }
-    if (desired_velocity < -MAX_VELOCITY) {
-        desired_velocity = -MAX_VELOCITY; // Limit to min velocity
+    if (desired_velocity < 0) {
+        desired_velocity = -desired_velocity;
     }
     return (desired_velocity / MAX_VELOCITY) * MAX_PWM_VALUE; // Scale to PWM range
 }
@@ -376,29 +377,44 @@ float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_e
     // Calculate the output
     float output = (Kp * error) + (Ki * (*integral)) + (Kd * derivative);
 
+    // Save the last error for next iteration
+    last_error = error;
+
     return output; // Return the control output
 }
-
+int32_t current_pulse_count = 0;
 // Function to calculate RPM and control the motor
 void calculateVel1(float velTag, float current_time) {
-    // Debugging output
-
-
-
     static float distance_traveled = 0.0;
-    static int32_t current_pulse_count = 0;
+
+
+    // Check if velTag has changed
+    if (fabs(velTag - last_velTag) > VELOCITY_CHANGE_THRESHOLD) {
+        // Stop the motor
+    	Motor_Control1(0, 0);
+
+        vel = 0.0;
+        Reset_Encoder1();
+        rpm = 0.0;
+        // Reset variables
+        integral1 = 0.0;
+        last_error = 0.0;
+        last_control_output = 0.0;
+        distance_traveled = 0.0;
+        pulse_count = 0; // Reset pulse count
+        last_velTag = velTag; // Update last velTag
+        HAL_Delay(STOP_DURATION); // Wait for 100 ms
+    }
 
     // Calculate the time elapsed since the last update
     float delta_time = current_time - last_time;
 
     // Read the current pulse count
     current_pulse_count = Read_Encoder1();
-
-    HAL_Delay(100);
+    HAL_Delay(10);
 
     // Calculate the difference in pulse count
     int32_t pulse_difference = current_pulse_count - pulse_count;
-
 
     // Calculate RPM as a positive value
     rpm = fabs((float)pulse_difference / (float)PPR) * 60.0; // Always positive
@@ -416,9 +432,17 @@ void calculateVel1(float velTag, float current_time) {
     vel = moving_average_filter(new_vel);
 
     // Update position based on velocity and elapsed time
-    distance_traveled = vel * (delta_time / 1000.0); // Linear distance traveled in meters
-    angular_position_rad += distance_traveled / (dia / 2.0); // Update angular position in radians
-    angular_position_deg = angular_position_rad * (180.0 / M_PI); // Convert to degrees
+    if(velTag == 0 ||velTag == -0 ){
+    	  distance_traveled += 0.0 * (delta_time / 1000.0); // Linear distance traveled in meters
+    	    angular_position_rad += distance_traveled / (dia / 2.0); // Update angular position in radians
+    	    angular_position_deg = angular_position_rad * (180.0 / M_PI); // Convert to degrees
+    }
+    else {
+    	  distance_traveled += vel * (delta_time / 1000.0); // Linear distance traveled in meters
+    	    angular_position_rad += distance_traveled / (dia / 2.0); // Update angular position in radians
+    	    angular_position_deg = angular_position_rad * (180.0 / M_PI); // Convert to degrees
+    }
+
 
     // Kalman filter update
     estimate = estimate; // Predicted state (previous estimate)
@@ -427,67 +451,48 @@ void calculateVel1(float velTag, float current_time) {
     // Measurement update
     kalman_gain = error_covariance / (error_covariance + measurement_noise); // Calculate Kalman gain
     estimate += kalman_gain * (vel - estimate); // Update estimate with measurement
-    error_covariance *= (1 - kalman_gain); // Update error covariance
-
-    // Use the Kalman filter estimate for velocity
-    float filtered_vel = estimate;
-
-    // Check for sudden changes in velocity with deadband
-    if (fabs(filtered_vel - last_valid_vel) > VELOCITY_CHANGE_THRESHOLD) {
-        vel = last_valid_vel; // Ignore sudden change, retain last valid velocity
-    } else {
-        vel = filtered_vel; // Update velocity if change is within threshold
-        last_valid_vel = vel; // Update last valid velocity
-    }
+    error_covariance = (1 - kalman_gain) * error_covariance; // Update error covariance
 
     // Calculate control output using PID controller
     control_output = PID_Controller(Kp, Ki, Kd, &integral1, last_error, velTag, vel);
 
-
-    // Maintain control output if within proximity threshold
-    if (fabs(vel - velTag) < VELOCITY_PROXIMITY_THRESHOLD) {
-        control_output = last_control_output; // Retain last control output
+    // Apply rate limiting to control output
+    if (fabs(control_output - last_control_output) > RATE_LIMIT) {
+        control_output = last_control_output + (control_output > last_control_output ? RATE_LIMIT : -RATE_LIMIT);
     }
 
-    // Apply low-pass filter to smooth control output
-    control_output = (SMOOTHING_FACTOR * control_output) + ((1 - SMOOTHING_FACTOR) * last_control_output);
-
-    // Rate limit the control output to prevent sudden changes
-    float output_change = control_output - last_control_output;
-    if (output_change > RATE_LIMIT) {
-        control_output = last_control_output + RATE_LIMIT; // Limit increase
-    } else if (output_change < -RATE_LIMIT) {
-        control_output = last_control_output - RATE_LIMIT; // Limit decrease
-    }
-
-    last_control_output = control_output; // Update last control output
     realVel = vel / 2.0; // Scale factor
-    realRPM = rpm / 2.0;
+      realRPM = rpm / 2.0;
 
-    // Set the PWM duty cycle based on the sign of desired_velocity
-    if (velTag > 0) {
-        Motor_Control1(2, calculate_pwm(control_output)); // Positive velocity
-    } else if (velTag < 0) {
-        Motor_Control1(1, calculate_pwm(control_output)); // Negative velocity
-    }
+      // Set the PWM duty cycle based on the sign of desired_velocity
+      if (velTag > 0) {
+          Motor_Control1(2, calculate_pwm(control_output)); // Positive velocity
+      } else if (velTag < 0) {
+          Motor_Control1(1, calculate_pwm(control_output)); // Negative velocity
+      }
+    // Update last time and last control output
+    last_time = current_time;
+    last_control_output = control_output;
 
-    // Update the last time for the next calculation
-    last_time = current_time; // Store the current time for the next update
+
 }
 void motor(void){
+		ReadFourFloats(&value1, &value2, &value3, &value4);
 
-	 // ReadFourFloats(&value1, &value2, &value3, &value4);
-	  HAL_Delay(100);
-	  time = HAL_GetTick();
+
 	  HAL_Delay(1);
 	 // JointState1 jointState1 = calculateVel1(0., time);
 	  //JointState2 jointState2 = read2(&value2,currentTime);
 	  //JointState3 jointState3 = read3(&value3,currentTime);
 	  //JointState4 jointState4 = read4(&value4,currentTime);
-	//  calculateVel1(0.54, time);
-	  HAL_Delay(1);
-	// sendJointState(angular_position_rad, 0.0, 0.0, 0.0,
-			// realVel,  0.27,  0.27,  0.27);
+	  time = HAL_GetTick();
+	 calculateVel1(value1, time);
+
+
+	    // Print the final values
+	  HAL_Delay(100);
+	 sendJointState(angular_position_rad, 0.0, 0.0, 0.0,
+			 realVel,  0.0,  0.0,  0.0);
 	/*  sendJointState(jointState1.position,jointState2.position,  jointState3.position, jointState4.position,
  jointState1.angularVelocity, jointState2.angularVelocity,   jointState3.angularVelocity, jointState4.angularVelocity);
 	  HAL_Delay(10);*/

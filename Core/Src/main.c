@@ -101,8 +101,6 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-
-
 	HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -136,8 +134,6 @@ int main(void)
 	Reset_Encoder4();
 
 
-
-
  //Motor_Control1(2, 1000);
   /* USER CODE END 2 */
 
@@ -152,7 +148,7 @@ int main(void)
 
 		motor();
 
-		HAL_Delay(100); //
+
     /* USER CODE BEGIN 3 */
 	}
   /* USER CODE END 3 */

@@ -15,11 +15,19 @@
 #ifndef INC_LIB_DATA_H_
 #define INC_LIB_DATA_H_
 
-void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, float vel2, float vel3, float vel4);
-void UART_ReceiveString(uint8_t *buffer, size_t length);
-void ReadFourFloats(float *val1, float *val2, float *val3, float *val4);
+
 void resetDataSend(void);
 void SR(void);
 void calculateVel1(float velTag, float current_time);
+void reset_system();
 void motor(void);
+void UART_ReceiveString(uint8_t *buffer, size_t length);
+void ReadFourFloats(float *val1, float *val2, float *val3, float *val4);
+float moving_average_filter(float new_velocity);
+float calculate_pwm(float desired_velocity);
+float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value);
+void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, float vel2, float vel3, float vel4);
+
+
+
 #endif /* INC_LIB_DATA_H_ */

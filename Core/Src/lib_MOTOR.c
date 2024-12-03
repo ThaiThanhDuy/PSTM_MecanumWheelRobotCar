@@ -307,13 +307,13 @@ void Reset_Encoder4(void) {
 	__HAL_TIM_SET_COUNTER(&htim8, 0);
 }
 
-void readEncoder(void) {
+/*void readEncoder(void) {
 	positionMotor1 = Read_Encoder1();
 	positionMotor2 = Read_Encoder2();
 	positionMotor3 = Read_Encoder3();
 	positionMotor4 = Read_Encoder4();
 	HAL_Delay(100);
-}
+}*/
 //void printEncoder(void) {
 //	printf("Encoder 1 : %i\n", positionMotor1);
 //	printf("Encoder 2 : %i\n", positionMotor2);
