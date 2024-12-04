@@ -27,7 +27,8 @@ Core/Src/lib_DATA.o: ../Core/Src/lib_DATA.c ../Core/Inc/lib_DATA.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/main.h ../Core/Inc/lib_MOTOR.h ../Core/Inc/lib_UART.h
+ ../Core/Inc/main.h ../Core/Inc/lib_MOTOR.h ../Core/Inc/lib_UART.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
 ../Core/Inc/lib_DATA.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -60,3 +61,4 @@ Core/Src/lib_DATA.o: ../Core/Src/lib_DATA.c ../Core/Inc/lib_DATA.h \
 ../Core/Inc/main.h:
 ../Core/Inc/lib_MOTOR.h:
 ../Core/Inc/lib_UART.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h:

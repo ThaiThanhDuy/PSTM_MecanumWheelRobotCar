@@ -6,11 +6,22 @@
  */
 
 #include <lib_DATA.h>
+#include <stddef.h>
+#include <stm32f4xx_hal_def.h>
+#include <stm32f4xx_hal_uart.h>
+#include <sys/_stdint.h>
 
 
 extern UART_HandleTypeDef huart2;
 
-
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim9;
+extern TIM_HandleTypeDef htim12;
 
 char P1[20];
 char P2[20];
@@ -24,51 +35,50 @@ float pos1 = 0.0; // Replace with actual position reading
 float pos2 = 0.0; // Replace with actual position reading
 float pos3 = 0.0; // Replace with actual position reading
 float pos4 = 0.0; // Replace with actual position reading
-float vel1 = 0.0; // Replace with actual velocity reading
-float vel2 = 0.0; // Replace with actual velocity reading
-float vel3 = 0.0; // Replace with actual velocity reading
-float vel4 = 0.0; // Replace with actual velocity reading
+float velR1 = 0.0; // Replace with actual velocity reading
+float velR2 = 0.0; // Replace with actual velocity reading
+float velR3 = 0.0; // Replace with actual velocity reading
+float velR4 = 0.0; // Replace with actual velocity reading
 uint8_t buffer[30]; // Buffer to hold the received string
 float value1, value2, value3, value4;
 float oldValue1, oldValue2 ,oldValue3,oldValue4;
 /// SEND DATA
 
-void sendJointState(float pos1, float pos2, float pos3, float pos4, float vel1, float vel2, float vel3, float vel4) {
+void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1, float velO2, float velO3, float velO4) {
     // Prepare joint state message
     /*sprintf(txBuffer, "pos1:%i vel1:%i pos2:%i vel2:%i pos3:%i vel3:%i pos4:%i vel4:%i\n",
             pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);*/
 
-   /* snprintf(P1, sizeof(P1), "pos1:%.2f ", pos1);
+  /*  snprintf(P1, sizeof(P1), "pos1:%.2f ", pos1);
     HAL_UART_Transmit(&huart2, (uint8_t*) P1, strlen(P1), HAL_MAX_DELAY);
-    snprintf(V1, sizeof(V1), "vel1:%.2f ", vel1);
+    snprintf(V1, sizeof(V1), "vel1:%.2f ", velO1);
     HAL_UART_Transmit(&huart2, (uint8_t*) V1, strlen(V1), HAL_MAX_DELAY);
 
     snprintf(P2, sizeof(P2), "pos2:%.2f ", pos2);
     HAL_UART_Transmit(&huart2, (uint8_t*) P2, strlen(P2), HAL_MAX_DELAY);
-    snprintf(V2, sizeof(V2), "vel2:%.2f ", vel2);
+    snprintf(V2, sizeof(V2), "vel2:%.2f ", velO2);
     HAL_UART_Transmit(&huart2, (uint8_t*) V2, strlen(V2), HAL_MAX_DELAY);
 
     snprintf(P3, sizeof(P3), "pos3:%.2f ", pos3);
     HAL_UART_Transmit(&huart2, (uint8_t*) P3, strlen(P3), HAL_MAX_DELAY);
-    snprintf(V3, sizeof(V3), "vel3:%.2f ", vel3);
+    snprintf(V3, sizeof(V3), "vel3:%.2f ", velO3);
     HAL_UART_Transmit(&huart2, (uint8_t*) V3, strlen(V3), HAL_MAX_DELAY);
 
     snprintf(P4, sizeof(P4), "pos4:%.2f ", pos4);
     HAL_UART_Transmit(&huart2, (uint8_t*) P4, strlen(P4), HAL_MAX_DELAY);
-    snprintf(V4, sizeof(V4), "vel4:%.2f ", vel4);
+    snprintf(V4, sizeof(V4), "vel4:%.2f ", velO4);
     HAL_UART_Transmit(&huart2, (uint8_t*) V4, strlen(V4), HAL_MAX_DELAY);
 
-    HAL_Delay(100)*/;
+    HAL_Delay(100);*/
     // Prepare a buffer to hold the complete joint state message
        char txBuffer[256]; // Ensure this buffer is large enough to hold the entire message
 
        // Format the joint state message into the buffer
        snprintf(txBuffer, sizeof(txBuffer), "pos1:%.2f vel1:%.2f pos2:%.2f vel2:%.2f pos3:%.2f vel3:%.2f pos4:%.2f vel4:%.2f\n",
-                pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);
+                pos1, velO1, pos2, velO2, pos3, velO3, pos4, velO4);
 
        // Transmit the complete message over UART
        HAL_UART_Transmit(&huart2, (uint8_t*)txBuffer, strlen(txBuffer), HAL_MAX_DELAY);
-
        // Optional delay to prevent flooding the UART
        HAL_Delay(100);
 }
@@ -93,7 +103,7 @@ void UART_ReceiveString(uint8_t *buffer, size_t length) {
 void ReadFourFloats(float *val1, float *val2, float *val3, float *val4) {
 	HAL_Delay(100); // Wait for 100 ms before receiving new data
 	UART_ReceiveString(buffer, sizeof(buffer)); // Receive the string from UART
-	// Example input: "c: 0.15,0.15,0.15,0.15"
+	// Example input: "c: 0.54,0.54,0.54,0.54"
 
 	// Print the received buffer for debugging
 	printf("Received buffer: %s\n", buffer);
@@ -234,7 +244,7 @@ void SR(void){
     HAL_UART_Transmit(&huart2, (uint8_t *)output, strlen(output), HAL_MAX_DELAY);*/
 
 
-    sendJointState(pos1, pos2, pos3, pos4, vel1, vel2, vel3, vel4);
+    sendJointState(pos1, pos2, pos3, pos4, velR1, velR2, velR3, velR4);
 
 }
 
@@ -294,7 +304,6 @@ JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
     return jointState1;
 }*/
 
-
 #define MOVING_AVERAGE_SIZE 5 // Size for moving average filter
 #define PPR 11 // Pulses per revolution
 #define MAX_VELOCITY 0.27 // Maximum linear velocity in m/s
@@ -305,53 +314,51 @@ JointState1 read1( float* desiredAngularVelocity1,uint32_t time) {
 #define VELOCITY_CHANGE_THRESHOLD 0.54 // Threshold for sudden velocity change
 #define VELOCITY_PROXIMITY_THRESHOLD 0.02 // Threshold for proximity to desired velocity
 #define STOP_DURATION 100 // Duration to stop the motor in milliseconds
+#define DEAD_BAND 0.01 // Deadband for velocity control
+#define HYSTERESIS 0.05 // Hysteresis for switching between positive and negative
+#define RAMP_RATE 5.0 // Maximum change in control output per cycle for ramping
 
 // Global variables
-uint32_t pulse_count = 0;  // Variable to store pulse count
-double rpm = 0.0;           // Variable to store calculated RPM
-float vel = 0.0;            // Linear velocity (m/s)
-float dia = 0.097;          // Diameter in meters
+uint32_t pulse_count1 = 0;  // Variable to store pulse count
+double rpm1 = 0.0;           // Variable to store calculated RPM
+float vel1 = 0.0;            // Linear velocity (m/s)
+float dia1 = 0.097;          // Diameter in meters
 
-float Kp = 0.15;             // Proportional gain
-float Ki = 0.01;            // Integral gain
-float Kd = 0.25;            // Derivative gain
-float control_output;       // Control output for PWM
-float integral1 = 0.0;      // Integral term for PID
-float last_error = 0.0;     // Last error for PID
-float last_control_output = 0.0; // Last control output for smoothing
-float last_valid_vel = 0.0; // Last valid velocity
-float last_velTag = 0.0;    // Store the last velTag
+float Kp1 = 0.15;             // Proportional gain
+float Ki1 = 0.01;            // Integral gain
+float Kd1 = 0.25;            // Derivative gain
+float control_output1;       // Control output for PWM
+float integral1_1 = 0.0;      // Integral term for PID
+float last_error1 = 0.0;     // Last error for PID
+float last_control_output1 = 0.0; // Last control output for smoothing
+float last_valid_vel1 = 0.0; // Last valid velocity
+float last_velTag1 = 0.0;    // Store the last velTag
 
 // Kalman filter variables
-float kalman_gain = 0.1; // Initial Kalman gain
-float estimate = 0.0;     // Initial estimate of velocity
-float error_covariance = 1.0; // Initial error covariance
-float process_noise = 0.1; // Process noise covariance
-float measurement_noise = 0.1; // Measurement noise covariance
+float kalman_gain1 = 0.1; // Initial Kalman gain
+float estimate1 = 0.0;     // Initial estimate of velocity
+float error_covariance1 = 1.0; // Initial error covariance
+float process_noise1 = 0.1; // Process noise covariance
+float measurement_noise1 = 0.1; // Measurement noise covariance
 
 // Moving average buffer
-float velocity_buffer[MOVING_AVERAGE_SIZE] = {0};
-int buffer_index = 0;
-float last_time = 0.0; // Variable to store the last time update
-float angular_position_rad = 0.0; // Angular position in radians
-float angular_position_deg = 0.0; // Angular position in degrees
-float realVel;
-float realRPM;
+float velocity_buffer1[MOVING_AVERAGE_SIZE] = {0};
+int buffer_index1 = 0;
+float last_time1 = 0.0; // Variable to store the last time update
+float angular_position_rad1 = 0.0; // Angular position in radians
+float angular_position_deg1 = 0.0; // Angular position in degrees
+float realVel1;
+float realRPM1;
 
-// Function to calculate moving average
-float moving_average_filter(float new_velocity) {
-    velocity_buffer[buffer_index] = new_velocity;
-    buffer_index = (buffer_index + 1) % MOVING_AVERAGE_SIZE;
-
-    float sum = 0.0;
-    for (int i = 0; i < MOVING_AVERAGE_SIZE; i++) {
-        sum += velocity_buffer[i];
-    }
-    return sum / MOVING_AVERAGE_SIZE;
+// Function to calculate exponential moving average
+float moving_average_filter1(float new_velocity) {
+    static float ema1 = 0.0; // Initialize EMA variable
+    ema1 = (SMOOTHING_FACTOR * new_velocity) + ((1 - SMOOTHING_FACTOR) * ema1);
+    return ema1;
 }
 
 // Function to calculate PWM duty cycle based on desired velocity
-float calculate_pwm(float desired_velocity) {
+float calculate_pwm1(float desired_velocity) {
     if (desired_velocity < 0) {
         desired_velocity = -desired_velocity;
     }
@@ -359,12 +366,12 @@ float calculate_pwm(float desired_velocity) {
 }
 
 // PID Controller Function with Anti-Windup
-float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value) {
+float PID_Controller1(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value) {
     // Calculate the error
-    float error = setpoint - measured_value;
+    float error1 = setpoint - measured_value;
 
     // Update the integral term with clamping to prevent windup
-    *integral += error;
+    *integral += error1;
     if (*integral > MAX_INTEGRAL) {
         *integral = MAX_INTEGRAL; // Clamp integral to prevent windup
     } else if (*integral < -MAX_INTEGRAL) {
@@ -372,128 +379,680 @@ float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_e
     }
 
     // Calculate the derivative term
-    float derivative = error - last_error;
+    float derivative1 = error1 - last_error;
 
     // Calculate the output
-    float output = (Kp * error) + (Ki * (*integral)) + (Kd * derivative);
+    float output1 = (Kp * error1) + (Ki * (*integral)) + (Kd * derivative1);
 
     // Save the last error for next iteration
-    last_error = error;
+    last_error = error1;
 
-    return output; // Return the control output
+    return output1; // Return the control output
 }
-int32_t current_pulse_count = 0;
+
+int32_t current_pulse_count1 = 0;
+
+
 // Function to calculate RPM and control the motor
-void calculateVel1(float velTag, float current_time) {
-    static float distance_traveled = 0.0;
+void calculateVel1(float velTag1, float current_time1) {
+    static float distance_traveled1 = 0.0;
 
+    // Check if velTag1 is within the deadband
+    if (fabs(velTag1) < DEAD_BAND) {
+        velTag1 = 0; // Set velTag1 to zero if within deadband
+    }
 
-    // Check if velTag has changed
-    if (fabs(velTag - last_velTag) > VELOCITY_CHANGE_THRESHOLD) {
-        // Stop the motor
-    	Motor_Control1(0, 0);
-
-        vel = 0.0;
-        Reset_Encoder1();
-        rpm = 0.0;
-        // Reset variables
-        integral1 = 0.0;
-        last_error = 0.0;
-        last_control_output = 0.0;
-        distance_traveled = 0.0;
-        pulse_count = 0; // Reset pulse count
-        last_velTag = velTag; // Update last velTag
+    // Immediate stop if velTag1 is 0
+    if (velTag1 == 0) {
+        __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, 0);
+        vel1 = 0.0;
+        __HAL_TIM_SET_COUNTER(&htim1, 0);
+        rpm1 = 0.0;
+        control_output1 = 0.0;
+        // Reset variables except angular_position_rad1
+        realVel1 = 0.0;
+        realRPM1 = 0.0;
+        integral1_1 = 0.0;
+        last_error1 = 0.0;
+        last_control_output1 = 0.0;
+        distance_traveled1 = 0.0;
+        pulse_count1 = 0; // Reset pulse count
+        last_velTag1 = velTag1; // Update last velTag1
         HAL_Delay(STOP_DURATION); // Wait for 100 ms
+        return; // Exit the function
     }
 
     // Calculate the time elapsed since the last update
-    float delta_time = current_time - last_time;
+    float delta_time1 = current_time1 - last_time1;
 
     // Read the current pulse count
-    current_pulse_count = Read_Encoder1();
+    current_pulse_count1 = __HAL_TIM_GET_COUNTER(&htim1);
     HAL_Delay(10);
 
     // Calculate the difference in pulse count
-    int32_t pulse_difference = current_pulse_count - pulse_count;
+    int32_t pulse_difference1 = current_pulse_count1 - pulse_count1;
 
     // Calculate RPM as a positive value
-    rpm = fabs((float)pulse_difference / (float)PPR) * 60.0; // Always positive
-    pulse_count = current_pulse_count;
+    rpm1 = fabs((float)pulse_difference1 / (float)PPR) * 60.0; // Always positive
+    pulse_count1 = current_pulse_count1;
 
+    // Limit RPM to the range [0, 250]
+       rpm1 = fmax(0.0, fmin(250.0, rpm1));
     // Calculate linear velocity (m/s)
-    float new_vel;
-    if (pulse_difference < 0) {
-        new_vel = -((rpm / 60.0) * dia * M_PI); // Negative velocity for reverse direction
+    float new_vel1;
+    if (pulse_difference1 < 0) {
+        new_vel1 = -((rpm1 / 60.0) * dia1 * M_PI); // Negative velocity for reverse direction
     } else {
-        new_vel = (rpm / 60.0) * dia * M_PI; // Positive velocity for forward direction
+        new_vel1 = (rpm1 / 60.0) * dia1 * M_PI; // Positive velocity for forward direction
     }
 
     // Apply moving average filter for velocity
-    vel = moving_average_filter(new_vel);
-
+  //  vel1 = moving_average_filter1(new_vel1);
+    // Constrain the velocity to the range [-1, 1]
+       vel1= fmax(-1.0, fmin(1.0, moving_average_filter1(new_vel1)));
     // Update position based on velocity and elapsed time
-    if(velTag == 0 ||velTag == -0 ){
-    	  distance_traveled += 0.0 * (delta_time / 1000.0); // Linear distance traveled in meters
-    	    angular_position_rad += distance_traveled / (dia / 2.0); // Update angular position in radians
-    	    angular_position_deg = angular_position_rad * (180.0 / M_PI); // Convert to degrees
-    }
-    else {
-    	  distance_traveled += vel * (delta_time / 1000.0); // Linear distance traveled in meters
-    	    angular_position_rad += distance_traveled / (dia / 2.0); // Update angular position in radians
-    	    angular_position_deg = angular_position_rad * (180.0 / M_PI); // Convert to degrees
-    }
-
+    distance_traveled1 += vel1 * (delta_time1 / 1000.0); // Linear distance traveled in meters
+    angular_position_rad1 += distance_traveled1 / (dia1 / 2.0); // Update angular position in radians
+    angular_position_deg1 = angular_position_rad1 * (180.0 / M_PI); // Convert to degrees
 
     // Kalman filter update
-    estimate = estimate; // Predicted state (previous estimate)
-    error_covariance += process_noise; // Update error covariance
+    estimate1 = estimate1; // Predicted state (previous estimate)
+    error_covariance1 += process_noise1; // Update error covariance
 
     // Measurement update
-    kalman_gain = error_covariance / (error_covariance + measurement_noise); // Calculate Kalman gain
-    estimate += kalman_gain * (vel - estimate); // Update estimate with measurement
-    error_covariance = (1 - kalman_gain) * error_covariance; // Update error covariance
+    kalman_gain1 = error_covariance1 / (error_covariance1 + measurement_noise1); // Calculate Kalman gain
+    estimate1 += kalman_gain1 * (vel1 - estimate1); // Update estimate with measurement
+    error_covariance1 = (1 - kalman_gain1) * error_covariance1; // Update error covariance
 
     // Calculate control output using PID controller
-    control_output = PID_Controller(Kp, Ki, Kd, &integral1, last_error, velTag, vel);
+    control_output1 = PID_Controller1(Kp1, Ki1, Kd1, &integral1_1, last_error1, velTag1, vel1);
 
-    // Apply rate limiting to control output
-    if (fabs(control_output - last_control_output) > RATE_LIMIT) {
-        control_output = last_control_output + (control_output > last_control_output ? RATE_LIMIT : -RATE_LIMIT);
+    // Implement ramping to control output
+    if (fabs(control_output1 - last_control_output1) > RAMP_RATE) {
+        control_output1 = last_control_output1 + (control_output1 > last_control_output1 ? RAMP_RATE : -RAMP_RATE);
     }
 
-    realVel = vel / 2.0; // Scale factor
-      realRPM = rpm / 2.0;
+    // Implement hysteresis to prevent rapid switching
+    if ((last_control_output1 > 0 && control_output1 < -HYSTERESIS) || (last_control_output1 < 0 && control_output1 > HYSTERESIS)) {
+        control_output1 = last_control_output1; // Maintain last control output if within hysteresis
+    }
 
-      // Set the PWM duty cycle based on the sign of desired_velocity
-      if (velTag > 0) {
-          Motor_Control1(2, calculate_pwm(control_output)); // Positive velocity
-      } else if (velTag < 0) {
-          Motor_Control1(1, calculate_pwm(control_output)); // Negative velocity
-      }
+    realVel1 = vel1 / 2.0; // Scale factor
+    realRPM1 = rpm1 / 2.0;
+    // Limit control_output4 to the range [-0.27, 0.27]
+       control_output1 = fmax(-0.27, fmin(0.27, control_output1));
+    // Set the PWM duty cycle based on the sign of desired_velocity
+    if (velTag1 >  0) {
+        // Positive velocity
+        __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, calculate_pwm1(control_output1));
+    } else if (velTag1 < 0) {
+        // Negative velocity
+        __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, calculate_pwm1(control_output1));
+        __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, 0);
+    }
+
     // Update last time and last control output
-    last_time = current_time;
-    last_control_output = control_output;
+    last_time1 = current_time1;
+    last_control_output1 = control_output1;
+}
+// Global variables
+uint32_t pulse_count2 = 0;  // Variable to store pulse count
+double rpm2 = 0.0;           // Variable to store calculated RPM
+float vel2 = 0.0;            // Linear velocity (m/s)
+float dia2 = 0.097;          // Diameter in meters
+
+float Kp2 = 0.15;             // Proportional gain
+float Ki2 = 0.01;            // Integral gain
+float Kd2 = 0.25;            // Derivative gain
+float control_output2;       // Control output for PWM
+float integral1_2 = 0.0;      // Integral term for PID
+float last_error2 = 0.0;     // Last error for PID
+float last_control_output2 = 0.0; // Last control output for smoothing
+float last_valid_vel2 = 0.0; // Last valid velocity
+float last_velTag2 = 0.0;    // Store the last velTag
+
+// Kalman filter variables
+float kalman_gain2 = 0.1; // Initial Kalman gain
+float estimate2 = 0.0;     // Initial estimate of velocity
+float error_covariance2 = 1.0; // Initial error covariance
+float process_noise2 = 0.1; // Process noise covariance
+float measurement_noise2 = 0.1; // Measurement noise covariance
+
+// Moving average buffer
+float velocity_buffer2[MOVING_AVERAGE_SIZE] = {0};
+int buffer_index2 = 0;
+float last_time2 = 0.0; // Variable to store the last time update
+float angular_position_rad2 = 0.0; // Angular position in radians
+float angular_position_deg2 = 0.0; // Angular position in degrees
+float realVel2;
+float realRPM2;
+
+// Function to calculate exponential moving average
+float moving_average_filter2(float new_velocity) {
+    static float ema2 = 0.0; // Initialize EMA variable
+    ema2 = (SMOOTHING_FACTOR * new_velocity) + ((1 - SMOOTHING_FACTOR) * ema2);
+    return ema2;
+}
+
+// Function to calculate PWM duty cycle based on desired velocity
+float calculate_pwm2(float desired_velocity) {
+    if (desired_velocity < 0) {
+        desired_velocity = -desired_velocity;
+    }
+    return (desired_velocity / MAX_VELOCITY) * MAX_PWM_VALUE; // Scale to PWM range
+}
+
+// PID Controller Function with Anti-Windup
+float PID_Controller2(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value) {
+    // Calculate the error
+    float error2 = setpoint - measured_value;
+
+    // Update the integral term with clamping to prevent windup
+    *integral += error2;
+    if (*integral > MAX_INTEGRAL) {
+        *integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+    } else if (*integral < -MAX_INTEGRAL) {
+        *integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
+    }
+
+    // Calculate the derivative term
+    float derivative2 = error2 - last_error;
+
+    // Calculate the output
+    float output2 = (Kp * error2) + (Ki * (*integral)) + (Kd * derivative2);
+
+    // Save the last error for next iteration
+    last_error = error2;
+
+    return output2; // Return the control output
+}
+
+int32_t current_pulse_count2 = 0;
+
+// Function to calculate RPM and control the motor
+void calculateVel2(float velTag2, float current_time2) {
+    static float distance_traveled2 = 0.0;
+
+    // Check if velTag2 is within the deadband
+    if (fabs(velTag2) < DEAD_BAND) {
+        velTag2 = 0; // Set velTag2 to zero if within deadband
+    }
+
+    // Immediate stop if velTag2 is 0
+    if (velTag2 == 0) {
+        __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
+        __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
+        vel2 = 0.0;
+        __HAL_TIM_SET_COUNTER(&htim3, 0);
+        rpm2 = 0.0;
+        control_output2 = 0.0;
+        // Reset variables except angular_position_rad2
+        realVel2 = 0.0;
+        realRPM2 = 0.0;
+        integral1_2 = 0.0;
+        last_error2 = 0.0;
+        last_control_output2 = 0.0;
+        distance_traveled2 = 0.0;
+        pulse_count2 = 0; // Reset pulse count
+        last_velTag2 = velTag2; // Update last velTag2
+        HAL_Delay(STOP_DURATION); // Wait for 100 ms
+        return; // Exit the function
+    }
+
+    // Calculate the time elapsed since the last update
+    float delta_time2 = current_time2 - last_time2;
+
+    // Read the current pulse count
+    current_pulse_count2 = __HAL_TIM_GET_COUNTER(&htim3);
+    HAL_Delay(10);
+
+    // Calculate the difference in pulse count
+    int32_t pulse_difference2 = current_pulse_count2 - pulse_count2;
+
+    // Calculate RPM as a positive value
+    rpm2 = fabs((float)pulse_difference2 / (float)PPR) * 60.0; // Always positive
+    pulse_count2 = current_pulse_count2;
+    // Limit RPM to the range [0, 250]
+          rpm2 = fmax(0.0, fmin(250.0, rpm2));
+    // Calculate linear velocity (m/s)
+    float new_vel2;
+    if (pulse_difference2 < 0) {
+        new_vel2 = -((rpm2 / 60.0) * dia2 * M_PI); // Negative velocity for reverse direction
+    } else {
+        new_vel2 = (rpm2 / 60.0) * dia2 * M_PI; // Positive velocity for forward direction
+    }
+
+    // Apply moving average filter for velocity
+    //vel2 = moving_average_filter2(new_vel2);
+    // Constrain the velocity to the range [-1, 1]
+       vel2 = fmax(-1.0, fmin(1.0, moving_average_filter2(new_vel2)));
+    // Update position based on velocity and elapsed time
+    distance_traveled2 += vel2 * (delta_time2 / 1000.0); // Linear distance traveled in meters
+    angular_position_rad2 += distance_traveled2 / (dia2 / 2.0); // Update angular position in radians
+    angular_position_deg2 = angular_position_rad2 * (180.0 / M_PI); // Convert to degrees
+
+    // Kalman filter update
+    estimate2 = estimate2; // Predicted state (previous estimate)
+    error_covariance2 += process_noise2; // Update error covariance
+
+    // Measurement update
+    kalman_gain2 = error_covariance2 / (error_covariance2 + measurement_noise2); // Calculate Kalman gain
+    estimate2 += kalman_gain2 * (vel2 - estimate2); // Update estimate with measurement
+    error_covariance2 = (1 - kalman_gain2) * error_covariance2; // Update error covariance
+
+    // Calculate control output using PID controller
+    control_output2 = PID_Controller2(Kp2, Ki2, Kd2, &integral1_2, last_error2, velTag2, vel2);
+
+    // Implement ramping to control output
+    if (fabs(control_output2 - last_control_output2) > RAMP_RATE) {
+        control_output2 = last_control_output2 + (control_output2 > last_control_output2 ? RAMP_RATE : -RAMP_RATE);
+    }
+
+    // Implement hysteresis to prevent rapid switching
+    if ((last_control_output2 > 0 && control_output2 < -HYSTERESIS) || (last_control_output2 < 0 && control_output2 > HYSTERESIS)) {
+        control_output2 = last_control_output2; // Maintain last control output if within hysteresis
+    }
+
+    realVel2 = vel2 / 2.0; // Scale factor
+    realRPM2 = rpm2 / 2.0;
+    // Limit control_output4 to the range [-0.27, 0.27]
+       control_output2 = fmax(-0.27, fmin(0.27, control_output2));
+    // Set the PWM duty cycle based on the sign of desired_velocity
+    if (velTag2 > 0) {
+        // Positive velocity
+    	   __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, calculate_pwm2(control_output2));
+    	        __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
+    } else if (velTag2 < 0) {
+        // Negative velocity
+    	__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
+    	__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, calculate_pwm2(control_output2));
+
+    }
+
+    // Update last time and last control output
+    last_time2 = current_time2;
+    last_control_output2 = control_output2;
+}
+// Global variables
+uint32_t pulse_count3 = 0;  // Variable to store pulse count
+double rpm3 = 0.0;           // Variable to store calculated RPM
+float vel3 = 0.0;            // Linear velocity (m/s)
+float dia3 = 0.097;          // Diameter in meters
+
+float Kp3 = 0.15;             // Proportional gain
+float Ki3 = 0.01;            // Integral gain
+float Kd3 = 0.25;            // Derivative gain
+float control_output3;       // Control output for PWM
+float integral1_3 = 0.0;      // Integral term for PID
+float last_error3 = 0.0;     // Last error for PID
+float last_control_output3 = 0.0; // Last control output for smoothing
+float last_valid_vel3 = 0.0; // Last valid velocity
+float last_velTag3 = 0.0;    // Store the last velTag
+
+// Kalman filter variables
+float kalman_gain3 = 0.1; // Initial Kalman gain
+float estimate3 = 0.0;     // Initial estimate of velocity
+float error_covariance3 = 1.0; // Initial error covariance
+float process_noise3 = 0.1; // Process noise covariance
+float measurement_noise3 = 0.1; // Measurement noise covariance
+
+// Moving average buffer
+float velocity_buffer3[MOVING_AVERAGE_SIZE] = {0};
+int buffer_index3 = 0;
+float last_time3 = 0.0; // Variable to store the last time update
+float angular_position_rad3 = 0.0; // Angular position in radians
+float angular_position_deg3 = 0.0; // Angular position in degrees
+float realVel3;
+float realRPM3;
+
+// Function to calculate exponential moving average
+float moving_average_filter3(float new_velocity) {
+    static float ema3 = 0.0; // Initialize EMA variable
+    ema3 = (SMOOTHING_FACTOR * new_velocity) + ((1 - SMOOTHING_FACTOR) * ema3);
+    return ema3;
+}
+
+// Function to calculate PWM duty cycle based on desired velocity
+float calculate_pwm3(float desired_velocity) {
+    if (desired_velocity < 0) {
+        desired_velocity = -desired_velocity;
+    }
+    return (desired_velocity / MAX_VELOCITY) * MAX_PWM_VALUE; // Scale to PWM range
+}
+
+// PID Controller Function with Anti-Windup
+float PID_Controller3(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value) {
+    // Calculate the error
+    float error3 = setpoint - measured_value;
+
+    // Update the integral term with clamping to prevent windup
+    *integral += error3;
+    if (*integral > MAX_INTEGRAL) {
+        *integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+    } else if (*integral < -MAX_INTEGRAL) {
+        *integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
+    }
+
+    // Calculate the derivative term
+    float derivative3 = error3 - last_error;
+
+    // Calculate the output
+    float output3 = (Kp * error3) + (Ki * (*integral)) + (Kd * derivative3);
+
+    // Save the last error for next iteration
+    last_error = error3;
+
+    return output3; // Return the control output
+}
+
+int32_t current_pulse_count3 = 0;
 
 
+// Function to calculate RPM and control the motor
+void calculateVel3(float velTag3, float current_time3) {
+    static float distance_traveled3 = 0.0;
+
+    // Check if velTag3 is within the deadband
+    if (fabs(velTag3) < DEAD_BAND) {
+        velTag3 = 0; // Set velTag3 to zero if within deadband
+    }
+
+    // Immediate stop if velTag3 is 0
+    if (velTag3 == 0) {
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+        vel3 = 0.0;
+        __HAL_TIM_SET_COUNTER(&htim5, 0);
+        rpm3 = 0.0;
+        control_output3 = 0.0;
+        // Reset variables except angular_position_rad3
+        realVel3 = 0.0;
+        realRPM3 = 0.0;
+        integral1_3 = 0.0;
+        last_error3 = 0.0;
+        last_control_output3 = 0.0;
+        distance_traveled3 = 0.0;
+        pulse_count3 = 0; // Reset pulse count
+        last_velTag3 = velTag3; // Update last velTag3
+        HAL_Delay(STOP_DURATION); // Wait for 100 ms
+        return; // Exit the function
+    }
+
+    // Calculate the time elapsed since the last update
+    float delta_time3 = current_time3 - last_time3;
+
+    // Read the current pulse count
+    current_pulse_count3 = __HAL_TIM_GET_COUNTER(&htim5);
+    HAL_Delay(10);
+
+    // Calculate the difference in pulse count
+    int32_t pulse_difference3 = current_pulse_count3 - pulse_count3;
+
+    // Calculate RPM as a positive value
+    rpm3 = fabs((float)pulse_difference3 / (float)PPR) * 60.0; // Always positive
+    pulse_count3 = current_pulse_count3;
+    // Limit RPM to the range [0, 250]
+          rpm3 = fmax(0.0, fmin(250.0, rpm3));
+    // Calculate linear velocity (m/s)
+    float new_vel3;
+    if (pulse_difference3 < 0) {
+        new_vel3 = -((rpm3 / 60.0) * dia3 * M_PI); // Negative velocity for reverse direction
+    } else {
+        new_vel3 = (rpm3 / 60.0) * dia3 * M_PI; // Positive velocity for forward direction
+    }
+    // Constrain the velocity to the range [-1, 1]
+       vel3 = fmax(-1.0, fmin(1.0, moving_average_filter3(new_vel3)));
+    // Apply moving average filter for velocity
+   // vel3 = moving_average_filter3(new_vel3);
+
+    // Update position based on velocity and elapsed time
+    distance_traveled3 += vel3 * (delta_time3 / 1000.0); // Linear distance traveled in meters
+    angular_position_rad3 += distance_traveled3 / (dia3 / 2.0); // Update angular position in radians
+    angular_position_deg3 = angular_position_rad3 * (180.0 / M_PI); // Convert to degrees
+
+    // Kalman filter update
+    estimate3 = estimate3; // Predicted state (previous estimate)
+    error_covariance3 += process_noise3; // Update error covariance
+
+    // Measurement update
+    kalman_gain3 = error_covariance3 / (error_covariance3 + measurement_noise3); // Calculate Kalman gain
+    estimate3 += kalman_gain3 * (vel3 - estimate3); // Update estimate with measurement
+    error_covariance3 = (1 - kalman_gain3) * error_covariance3; // Update error covariance
+
+    // Calculate control output using PID controller
+    control_output3 = PID_Controller3(Kp3, Ki3, Kd3, &integral1_3, last_error3, velTag3, vel3);
+
+    // Implement ramping to control output
+    if (fabs(control_output3 - last_control_output3) > RAMP_RATE) {
+        control_output3 = last_control_output3 + (control_output3 > last_control_output3 ? RAMP_RATE : -RAMP_RATE);
+    }
+
+    // Implement hysteresis to prevent rapid switching
+    if ((last_control_output3 > 0 && control_output3 < -HYSTERESIS) || (last_control_output3 < 0 && control_output3 > HYSTERESIS)) {
+        control_output3 = last_control_output3; // Maintain last control output if within hysteresis
+    }
+
+    realVel3 = vel3 / 2.0; // Scale factor
+    realRPM3 = rpm3 / 2.0;
+    // Limit control_output4 to the range [-0.27, 0.27]
+       control_output3 = fmax(-0.27, fmin(0.27, control_output3));
+    // Set the PWM duty cycle based on the sign of desired_velocity
+    if (velTag3 > 0) {
+        // Positive velocity
+ __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, calculate_pwm3(control_output3));
+    } else if (velTag3 < 0) {
+        // Negative velocity
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, calculate_pwm3(control_output3));
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+    }
+
+    // Update last time and last control output
+    last_time3 = current_time3;
+    last_control_output3 = control_output3;
+}
+
+// Global variables
+uint32_t pulse_count4 = 0;  // Variable to store pulse count
+double rpm4 = 0.0;           // Variable to store calculated RPM
+float vel4 = 0.0;            // Linear velocity (m/s)
+float dia4 = 0.097;          // Diameter in meters
+
+float Kp4 = 0.15;             // Proportional gain
+float Ki4 = 0.01;            // Integral gain
+float Kd4 = 0.25;            // Derivative gain
+float control_output4;       // Control output for PWM
+float integral1_4 = 0.0;      // Integral term for PID
+float last_error4 = 0.0;     // Last error for PID
+float last_control_output4 = 0.0; // Last control output for smoothing
+float last_valid_vel4 = 0.0; // Last valid velocity
+float last_velTag4 = 0.0;    // Store the last velTag
+
+// Kalman filter variables
+float kalman_gain4 = 0.1; // Initial Kalman gain
+float estimate4 = 0.0;     // Initial estimate of velocity
+float error_covariance4 = 1.0; // Initial error covariance
+float process_noise4 = 0.1; // Process noise covariance
+float measurement_noise4 = 0.1; // Measurement noise covariance
+
+// Moving average buffer
+float velocity_buffer4[MOVING_AVERAGE_SIZE] = {0};
+int buffer_index4 = 0;
+float last_time4 = 0.0; // Variable to store the last time update
+float angular_position_rad4 = 0.0; // Angular position in radians
+float angular_position_deg4 = 0.0; // Angular position in degrees
+float realVel4;
+float realRPM4;
+
+// Function to calculate exponential moving average
+float moving_average_filter4(float new_velocity) {
+    static float ema4 = 0.0; // Initialize EMA variable
+    ema4 = (SMOOTHING_FACTOR * new_velocity) + ((1 - SMOOTHING_FACTOR) * ema4);
+    return ema4;
+}
+
+// Function to calculate PWM duty cycle based on desired velocity
+float calculate_pwm4(float desired_velocity) {
+    if (desired_velocity < 0) {
+        desired_velocity = -desired_velocity;
+    }
+    return (desired_velocity / MAX_VELOCITY) * MAX_PWM_VALUE; // Scale to PWM range
+}
+
+// PID Controller Function with Anti-Windup
+float PID_Controller4(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value) {
+    // Calculate the error
+    float error4 = setpoint - measured_value;
+
+    // Update the integral term with clamping to prevent windup
+    *integral += error4;
+    if (*integral > MAX_INTEGRAL) {
+        *integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+    } else if (*integral < -MAX_INTEGRAL) {
+        *integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
+    }
+
+    // Calculate the derivative term
+    float derivative4 = error4 - last_error;
+
+    // Calculate the output
+    float output4 = (Kp * error4) + (Ki * (*integral)) + (Kd * derivative4);
+
+    // Save the last error for next iteration
+    last_error = error4;
+
+    return output4; // Return the control output
+}
+
+int32_t current_pulse_count4 = 0;
+
+
+// Function to calculate RPM and control the motor
+void calculateVel4(float velTag4, float current_time4) {
+    static float distance_traveled4 = 0.0;
+
+    // Check if velTag4 is within the deadband
+    if (fabs(velTag4) < DEAD_BAND) {
+        velTag4 = 0; // Set velTag4 to zero if within deadband
+    }
+
+    // Immediate stop if velTag4 is 0
+    if (velTag4 == 0) {
+        __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
+        vel4 = 0.0;
+        __HAL_TIM_SET_COUNTER(&htim8, 0);
+        rpm4 = 0.0;
+        control_output4 = 0.0;
+        // Reset variables except angular_position_rad4
+        realVel4 = 0.0;
+        realRPM4 = 0.0;
+        integral1_4 = 0.0;
+        last_error4 = 0.0;
+        last_control_output4 = 0.0;
+        distance_traveled4 = 0.0;
+        pulse_count4 = 0; // Reset pulse count
+        last_velTag4 = velTag4; // Update last velTag4
+        HAL_Delay(STOP_DURATION); // Wait for 100 ms
+        return; // Exit the function
+    }
+
+    // Calculate the time elapsed since the last update
+    float delta_time4 = current_time4 - last_time4;
+
+    // Read the current pulse count
+    current_pulse_count4 = __HAL_TIM_GET_COUNTER(&htim8);
+    HAL_Delay(10);
+
+    // Calculate the difference in pulse count
+    int32_t pulse_difference4 = current_pulse_count4 - pulse_count4;
+
+    // Calculate RPM as a positive value
+    rpm4 = fabs((float)pulse_difference4 / (float)PPR) * 60.0; // Always positive
+    pulse_count4 = current_pulse_count4;
+    // Limit RPM to the range [0, 250]
+          rpm4 = fmax(0.0, fmin(250.0, rpm4));
+    // Calculate linear velocity (m/s)
+    float new_vel4;
+    if (pulse_difference4 < 0) {
+        new_vel4 = -((rpm4 / 60.0) * dia4 * M_PI); // Negative velocity for reverse direction
+    } else {
+        new_vel4 = (rpm4 / 60.0) * dia4 * M_PI; // Positive velocity for forward direction
+    }
+
+    // Constrain the velocity to the range [-1, 1]
+       vel4 = fmax(-1.0, fmin(1.0, moving_average_filter4(new_vel4)));
+    // Apply moving average filter for velocity
+ //  vel4 = moving_average_filter4(new_vel4);
+
+    // Update position based on velocity and elapsed time
+    distance_traveled4 += vel4 * (delta_time4 / 1000.0); // Linear distance traveled in meters
+    angular_position_rad4 += distance_traveled4 / (dia4 / 2.0); // Update angular position in radians
+    angular_position_deg4 = angular_position_rad4 * (180.0 / M_PI); // Convert to degrees
+
+    // Kalman filter update
+    estimate4 = estimate4; // Predicted state (previous estimate)
+    error_covariance4 += process_noise4; // Update error covariance
+
+    // Measurement update
+    kalman_gain4 = error_covariance4 / (error_covariance4 + measurement_noise4); // Calculate Kalman gain
+    estimate4 += kalman_gain4 * (vel4 - estimate4); // Update estimate with measurement
+    error_covariance4 = (1 - kalman_gain4) * error_covariance4; // Update error covariance
+    // Calculate control output using PID controller
+    control_output4 = PID_Controller4(Kp4, Ki4, Kd4, &integral1_4, last_error4, velTag4, vel4);
+
+    // Implement ramping to control output
+    if (fabs(control_output4 - last_control_output4) > RAMP_RATE) {
+        control_output4 = last_control_output4 + (control_output4 > last_control_output4 ? RAMP_RATE : -RAMP_RATE);
+    }
+
+    // Implement hysteresis to prevent rapid switching
+    if ((last_control_output4 > 0 && control_output4 < -HYSTERESIS) || (last_control_output4 < 0 && control_output4 > HYSTERESIS)) {
+        control_output4 = last_control_output4; // Maintain last control output if within hysteresis
+    }
+
+    realVel4 = vel4 / 2.0; // Scale factor
+    realRPM4 = rpm4 / 2.0;
+    // Limit control_output4 to the range [-0.27, 0.27]
+       control_output4 = fmax(-0.27, fmin(0.27, control_output4));
+
+    // Set the PWM duty cycle based on the sign of desired_velocity
+    if (velTag4 > 0) {
+        // Positive velocity
+    	 __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, calculate_pwm4(control_output4));
+    	        __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
+
+    } else if (velTag4 < 0) {
+        // Negative velocity
+    	  __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
+    	        __HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, calculate_pwm4(control_output4));
+    }
+
+    // Update last time and last control output
+    last_time4 = current_time4;
+    last_control_output4 = control_output4;
 }
 void motor(void){
 		ReadFourFloats(&value1, &value2, &value3, &value4);
 
 
 	  HAL_Delay(1);
-	 // JointState1 jointState1 = calculateVel1(0., time);
-	  //JointState2 jointState2 = read2(&value2,currentTime);
-	  //JointState3 jointState3 = read3(&value3,currentTime);
-	  //JointState4 jointState4 = read4(&value4,currentTime);
-	  time = HAL_GetTick();
-	 calculateVel1(value1, time);
 
+	  time = HAL_GetTick();
+	  calculateVel1(value1, time);
+	  calculateVel2(value2, time);
+	  calculateVel3(value3, time);
+	  calculateVel4(value4, time);
+	 /* calculateVel1(0.54, time);
+	 	  calculateVel2(0.54, time);
+	 	  calculateVel3(0.54, time);
+	 	  calculateVel4(0.54, time);*/
 
 	    // Print the final values
 	  HAL_Delay(100);
-	 sendJointState(angular_position_rad, 0.0, 0.0, 0.0,
-			 realVel,  0.0,  0.0,  0.0);
-	/*  sendJointState(jointState1.position,jointState2.position,  jointState3.position, jointState4.position,
- jointState1.angularVelocity, jointState2.angularVelocity,   jointState3.angularVelocity, jointState4.angularVelocity);
-	  HAL_Delay(10);*/
+  sendJointState(angular_position_rad1, angular_position_rad2, angular_position_rad3, angular_position_rad4,
+			 realVel1,  realVel2,  realVel3, realVel4);
+
 }

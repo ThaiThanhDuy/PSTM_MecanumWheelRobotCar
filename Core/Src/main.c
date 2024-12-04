@@ -134,7 +134,7 @@ int main(void)
 	Reset_Encoder4();
 
 
- //Motor_Control1(2, 1000);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -144,9 +144,14 @@ int main(void)
 
 	while (1) {
     /* USER CODE END WHILE */
-		//readEncoder();
+	//	readEncoder();
 
-		motor();
+	motor();
+
+		/*standardMode(1);
+		HAL_Delay(1000);
+		standardMode(2);
+		HAL_Delay(1000);*/
 
 
     /* USER CODE BEGIN 3 */
