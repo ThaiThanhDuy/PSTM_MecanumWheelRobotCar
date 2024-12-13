@@ -57,7 +57,7 @@
 /* External variables --------------------------------------------------------*/
 
 /* USER CODE BEGIN EV */
-
+volatile uint32_t custom_tick = 0;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -187,7 +187,7 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  custom_tick++; // Increment your custom tick counter
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -199,5 +199,11 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /* USER CODE BEGIN 1 */
+void reset_custom_tick(void) {
+    custom_tick = 0; // Reset your custom tick counter
+}
 
+uint32_t get_custom_tick(void) {
+    return custom_tick; // Return the current value of your custom tick counter
+}
 /* USER CODE END 1 */

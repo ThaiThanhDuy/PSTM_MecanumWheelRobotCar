@@ -1,0 +1,2 @@
+../Core/Src/lib_UART.c:13:6:UART_SendString	8	static
+../Core/Src/lib_UART.c:17:6:UART_ReceiveData	112	static

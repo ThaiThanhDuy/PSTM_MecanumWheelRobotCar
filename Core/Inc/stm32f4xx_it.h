@@ -56,6 +56,8 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 /* USER CODE BEGIN EFP */
+void reset_custom_tick(void);
+uint32_t get_custom_tick(void);
 
 /* USER CODE END EFP */
 
