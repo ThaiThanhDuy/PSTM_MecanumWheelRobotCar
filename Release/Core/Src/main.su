@@ -1,4 +1,4 @@
-../Core/Src/main.c:166:6:SystemClock_Config	88	static,ignoring_inline_asm
-../Core/Src/main.c:94:5:main	88	static,ignoring_inline_asm
-../Core/Src/main.c:699:5:_write	12	static,ignoring_inline_asm
-../Core/Src/main.c:715:6:Error_Handler	0	static,ignoring_inline_asm
+../Core/Src/main.c:158:6:SystemClock_Config	88	static,ignoring_inline_asm
+../Core/Src/main.c:95:5:main	88	static,ignoring_inline_asm
+../Core/Src/main.c:725:5:_write	12	static,ignoring_inline_asm
+../Core/Src/main.c:741:6:Error_Handler	0	static,ignoring_inline_asm

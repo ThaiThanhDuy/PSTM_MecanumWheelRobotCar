@@ -11,6 +11,7 @@
 #include <stm32f4xx_hal_uart.h>
 #include <sys/_stdint.h>
 #include "stm32f4xx_it.h"
+
 extern UART_HandleTypeDef huart2;
 
 extern TIM_HandleTypeDef htim1;
@@ -22,6 +23,7 @@ extern TIM_HandleTypeDef htim8;
 extern TIM_HandleTypeDef htim9;
 extern TIM_HandleTypeDef htim12;
 
+extern I2C_HandleTypeDef hi2c1;
 char P1[20];
 char P2[20];
 char P3[20];
@@ -39,19 +41,114 @@ float velR2 = 0.0; // Replace with actual velocity reading
 float velR3 = 0.0; // Replace with actual velocity reading
 float velR4 = 0.0; // Replace with actual velocity reading
 
+
+// BNO055 I2C address
+#define BNO055_ADDRESS 0x28 << 1 // BNO055 I2C address (shifted for HAL)
+
+#define BNO055_CHIP_ID 0x00
+#define BNO055_OPR_MODE 0x3D
+#define BNO055_EULER_H 0x1A
+
+float yaw, pitch, roll;
+float yaw_filtered = 0.0;
+float pitch_filtered = 0.0;
+float roll_filtered = 0.0;
+const float alpha = 0.1; // Filter coefficient
+
+// Quaternion components
+float qx, qy, qz, qw;
+float qx_filtered = 0.0, qy_filtered = 0.0, qz_filtered = 0.0, qw_filtered = 0.0;
+const float q_alpha = 0.1; // Filter coefficient for quaternions
+void BNO055_Init(I2C_HandleTypeDef *hi2c) {
+    uint8_t chip_id;
+    HAL_I2C_Mem_Read(hi2c, BNO055_ADDRESS, BNO055_CHIP_ID, 1, &chip_id, 1, HAL_MAX_DELAY);
+
+    if (chip_id != 0xA0) {
+        // Handle error: BNO055 not found
+    }
+
+    // Set the operation mode to NDOF
+    uint8_t mode = 0x0C; // NDOF mode
+    HAL_I2C_Mem_Write(hi2c, BNO055_ADDRESS, BNO055_OPR_MODE, 1, &mode, 1, HAL_MAX_DELAY);
+    HAL_Delay(20); // Wait for the mode to change
+}
+
+void BNO055_Read_Euler_Angles(I2C_HandleTypeDef *hi2c, float *yaw, float *pitch, float *roll) {
+    uint8_t data[6];
+    HAL_I2C_Mem_Read(hi2c, BNO055_ADDRESS, BNO055_EULER_H, 1, data, 6, HAL_MAX_DELAY);
+
+    // Convert the data to float values
+    *yaw = (float)((data[0] | (data[1] << 8)) / 16.0);
+    *pitch = (float)((data[2] | (data[3] << 8)) / 16.0);
+    *roll = (float)((data[4] | (data[5] << 8)) / 16.0);
+}
+
+void calculateQuaternion(float yaw, float pitch, float roll) {
+    // Convert degrees to radians
+    float yaw_rad = yaw * (M_PI / 180.0);
+    float pitch_rad = pitch * (M_PI / 180.0);
+    float roll_rad = roll * (M_PI / 180.0);
+
+    // Calculate quaternion components
+    qw = cos(yaw_rad / 2) * cos(pitch_rad / 2) * cos(roll_rad / 2) + sin(yaw_rad / 2) * sin(pitch_rad / 2) * sin(roll_rad / 2);
+    qx = sin(yaw_rad / 2) * cos(pitch_rad / 2) * cos(roll_rad / 2) - cos(yaw_rad / 2) * sin(pitch_rad / 2) * sin(roll_rad / 2);
+    qy = cos(yaw_rad / 2) * sin(pitch_rad / 2) * cos(roll_rad / 2) + sin(yaw_rad / 2) * cos(pitch_rad / 2) * sin(roll_rad / 2);
+    qz = cos(yaw_rad / 2) * cos(pitch_rad / 2) * sin(roll_rad / 2) - sin(yaw_rad / 2) * sin(pitch_rad / 2) * cos(roll_rad / 2);
+}
+
+void readBNO055(void) {
+    // Read raw Euler angles from the BNO055
+    BNO055_Read_Euler_Angles(&hi2c1, &yaw, &pitch, &roll);
+
+    // Normalize yaw to be within 0 to 360 degrees
+  //  yaw = fmod(yaw, 360.0);
+
+
+    // Convert yaw from 0-360 to 360-0
+       yaw = 360.0 - yaw;
+       if (yaw < 0) {
+               yaw += 360.0; // Wrap around if negative
+           }
+    // Apply low-pass filter to yaw, roll, and pitch
+    yaw_filtered = alpha * yaw + (1 - alpha) * yaw_filtered;
+    roll_filtered = alpha * roll + (1 - alpha) * roll_filtered;
+    pitch_filtered = alpha * pitch + (1 - alpha) * pitch_filtered;
+
+    // Calculate quaternion from filtered Euler angles
+    calculateQuaternion(yaw_filtered, pitch_filtered, roll_filtered);
+    float norm = sqrt(qw * qw + qx * qx + qy * qy + qz * qz);
+     if (norm > 0.0) {
+         qw /= norm;
+         qx /= norm;
+         qy /= norm;
+         qz /= norm;
+     }
+     // Apply low-pass filter to quaternion components
+         qx_filtered = q_alpha * qx + (1 - q_alpha) * qx_filtered;
+         qy_filtered = q_alpha * qy + (1 - q_alpha) * qy_filtered;
+         qz_filtered = q_alpha * qz + (1 - q_alpha) * qz_filtered;
+         qw_filtered = q_alpha * qw + (1 - q_alpha) * qw_filtered;
+    // Output the filtered values and quaternion
+   /* printf("Filtered Yaw: %.2f\n", yaw_filtered);
+    printf("Filtered Roll: %.2f\n", roll_filtered);
+    printf("Filtered Pitch: %.2f\n", pitch_filtered);
+    printf("Quaternion: qx: %.4f, qy: %.4f, qz: %.4f, qw: %.4f\n", qx, qy, qz, qw);*/
+}
+
 uint8_t buffer[30]; // Buffer to hold the received string
 float value1, value2, value3, value4;
 float oldValue1, oldValue2, oldValue3, oldValue4;
 float newValue1, newValue2, newValue3, newValue4; // Store new values
 /// SEND DATA
 
+char txBuffer[256];
 void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1,
-		float velO2, float velO3, float velO4) {
+		float velO2, float velO3, float velO4, float yaw) {
 	// Prepare joint state message
 	/*sprintf(txBuffer, "pos1:%i vel1:%i pos2:%i vel2:%i pos3:%i vel3:%i pos4:%i vel4:%i\n",
-	 pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);*/
+	 pos1, vel1, pos2, vel2, pos3, vel3, pos4, vel4);
 
-	/*  snprintf(P1, sizeof(P1), "pos1:%.2f ", pos1);
+	  snprintf(P1, sizeof(P1), "pos1:%.2f ", pos1);
 	 HAL_UART_Transmit(&huart2, (uint8_t*) P1, strlen(P1), HAL_MAX_DELAY);
 	 snprintf(V1, sizeof(V1), "vel1:%.2f ", velO1);
 	 HAL_UART_Transmit(&huart2, (uint8_t*) V1, strlen(V1), HAL_MAX_DELAY);
@@ -71,14 +168,13 @@ void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1,
 	 snprintf(V4, sizeof(V4), "vel4:%.2f ", velO4);
 	 HAL_UART_Transmit(&huart2, (uint8_t*) V4, strlen(V4), HAL_MAX_DELAY);
 
-	 HAL_Delay(100);*/
-	// Prepare a buffer to hold the complete joint state message
-	char txBuffer[256]; // Ensure this buffer is large enough to hold the entire message
+	 HAL_Delay(100);
+*/
 
 	// Format the joint state message into the buffer
 	snprintf(txBuffer, sizeof(txBuffer),
-			"pos1:%.2f vel1:%.2f pos2:%.2f vel2:%.2f pos3:%.2f vel3:%.2f pos4:%.2f vel4:%.2f\n",
-			pos1, velO1, pos2, velO2, pos3, velO3, pos4, velO4);
+			"pos1:%.2f vel1:%.2f pos2:%.2f vel2:%.2f pos3:%.2f vel3:%.2f pos4:%.2f vel4:%.2f yaw:%.2f\n",
+			pos1, velO1, pos2, velO2, pos3, velO3, pos4, velO4,yaw);
 
 	// Transmit the complete message over UART
 	HAL_UART_Transmit(&huart2, (uint8_t*) txBuffer, strlen(txBuffer),
@@ -87,8 +183,45 @@ void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1,
 	HAL_Delay(100);
 }
 
-/// REVICE DATA
 
+
+/*
+void sendJointState(float pos1, float pos2, float pos3, float pos4,
+                    float velO1, float velO2, float velO3, float velO4, float yaw) {
+    // Prepare a buffer to hold the complete joint state message
+    // Ensure this buffer is large enough to hold the entire message
+
+    // Format the joint state message into the buffer
+    int length = snprintf(txBuffer, sizeof(txBuffer),
+             "pos1:%.2f vel1:%.2f pos2:%.2f vel2:%.2f pos3:%.2f vel3:%.2f pos4:%.2f vel4:%.2f yaw:%.2f",
+             pos1, velO1, pos2, velO2, pos3, velO3, pos4, velO4, yaw);
+
+    // Check if snprintf was successful
+    if (length < 0 || length >= sizeof(txBuffer)) {
+        // Handle error (e.g., log it, return, etc.)
+        // For example, you could print an error message or set an error flag
+        return; // Exit the function if there was an error
+    }
+
+    // Transmit the complete message over UART
+    HAL_StatusTypeDef status = HAL_UART_Transmit(&huart2, (uint8_t*) txBuffer, strlen(txBuffer), HAL_MAX_DELAY);
+
+    // Check if the transmission was successful
+    if (status != HAL_OK) {
+        // Handle the error (e.g., log it, return, etc.)
+        // You can use HAL_UART_GetError(&huart2) to get more information about the error
+        // For example:
+        uint32_t error = HAL_UART_GetError(&huart2);
+        // Log the error or take appropriate action
+        printf("UART Transmission Error: %lu\n", error);
+    }
+}
+    // Optional delay to prevent flooding the UART
+*/
+
+
+
+/// REVICE DATA ///
 
 void UART_ReceiveString(uint8_t *buffer, size_t length) {
     // Clear the buffer before receiving new data
@@ -240,19 +373,19 @@ void resetDataSend(void) {
 	memset(V4, 0, sizeof(V4));
 
 }
-void SR(void) {
+/*void SR(void) {
 
 	ReadFourFloats(&value1, &value2, &value3, &value4);
 
 	//-12.34,56.78,-90.12,34.56 Input example
 	//Send back the received values (for verification)
-	/*  char output[100];
+	  char output[100];
 	 snprintf(output, sizeof(output), "Received: %.2f, %.2f, %.2f, %.2f\r\n", value1, value2, value3, value4);
-	 HAL_UART_Transmit(&huart2, (uint8_t *)output, strlen(output), HAL_MAX_DELAY);*/
+	 HAL_UART_Transmit(&huart2, (uint8_t *)output, strlen(output), HAL_MAX_DELAY);
 
 	sendJointState(pos1, pos2, pos3, pos4, velR1, velR2, velR3, velR4);
 
-}
+}*/
 
 uint32_t time;
 
@@ -277,7 +410,7 @@ double rpm1 = 0.0;           // Variable to store calculated RPM
 float vel1 = 0.0;            // Linear velocity (m/s)
 float dia1 = 0.097;          // Diameter in meters
 
-float Kp1 = 0.15;             // Proportional gain
+float Kp1 = 0.1;             // Proportional gain
 float Ki1 = 0.01;            // Integral gain
 float Kd1 = 0.25;            // Derivative gain
 float control_output1;       // Control output for PWM
@@ -437,7 +570,12 @@ void calculateVel1(float velTag1, float current_time1) {
 
 	realVel1 = vel1 / 2.0; // Scale factor
 	realRPM1 = rpm1 / 2.0;
-
+	if(realVel1 <= 0.01 && velTag1 >= 0.0 ){
+			realVel1 =0.0;
+		}
+		else if ( realVel1 >= -0.01 && velTag1 <= 0.0){
+			realVel1 =0.0;
+		}
 	// Limit control_output4 to the range [-0.27, 0.27]
 	control_output1 = fmax(-0.27, fmin(0.27, control_output1));
 	// Set the PWM duty cycle based on the sign of desired_velocity
@@ -622,7 +760,12 @@ void calculateVel2(float velTag2, float current_time2) {
 
 	realVel2 = vel2 / 2.0; // Scale factor
 	realRPM2 = rpm2 / 2.0;
-
+	if(realVel2 <= 0.01 && velTag2 >= 0.0 ){
+		realVel2 =0.0;
+	}
+	else if ( realVel2 >= -0.01 && velTag2 <= 0.0){
+		realVel2 =0.0;
+	}
 	// Limit control_output4 to the range [-0.27, 0.27]
 	control_output2 = fmax(-0.27, fmin(0.27, control_output2));
 	// Set the PWM duty cycle based on the sign of desired_velocity
@@ -808,7 +951,12 @@ void calculateVel3(float velTag3, float current_time3) {
 
 	realVel3 = vel3 / 2.0; // Scale factor
 	realRPM3 = rpm3 / 2.0;
-
+	if(realVel3 <= 0.01 && velTag3 >= 0.0 ){
+			realVel3 =0.0;
+		}
+		else if ( realVel3 >= -0.01 && velTag3 <= 0.0){
+			realVel3 =0.0;
+		}
 	// Limit control_output4 to the range [-0.27, 0.27]
 	control_output3 = fmax(-0.27, fmin(0.27, control_output3));
 	// Set the PWM duty cycle based on the sign of desired_velocity
@@ -994,7 +1142,12 @@ void calculateVel4(float velTag4, float current_time4) {
 
 	realVel4 = vel4 / 2.0; // Scale factor
 	realRPM4 = rpm4 / 2.0;
-
+	if(realVel4 <= 0.01 && velTag4 >= 0.0 ){
+			realVel4 =0.0;
+		}
+		else if ( realVel4 >= -0.01 && velTag4 <= 0.0){
+			realVel4 =0.0;
+		}
 	// Limit control_output4 to the range [-0.27, 0.27]
 	control_output4 = fmax(-0.27, fmin(0.27, control_output4));
 
@@ -1017,12 +1170,10 @@ void calculateVel4(float velTag4, float current_time4) {
 	last_control_output4 = control_output4;
 }
 
-
-
-
 void motor(void) {
+//BNO055_Read_Euler_Quaternion(&hi2c1, &yaw, &pitch, &roll, &qx, &qy, &qz, &qw);
 	ReadFourFloats(&value1, &value2, &value3, &value4);
-
+	readBNO055();
 	HAL_Delay(1);
 
 	time = get_custom_tick();
@@ -1033,12 +1184,12 @@ void motor(void) {
   /*  calculateVel1(0.54, time);
 	calculateVel2(0.54, time);
 	calculateVel3(0.54, time);
-	calculateVel4(0.54, time);
-*/
+	calculateVel4(0.54, time);*/
+
 	// Print the final values
 	HAL_Delay(100);
 	sendJointState(angular_position_rad1, angular_position_rad2,
-			angular_position_rad3, angular_position_rad4, realVel1, realVel2,
-			realVel3, realVel4);
+			angular_position_rad3, angular_position_rad4,
+			realVel1, realVel2,realVel3, realVel4,yaw);
 
 }

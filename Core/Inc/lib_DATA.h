@@ -12,9 +12,11 @@
 #include  "stdio.h"
 #include "math.h"
 #include <lib_MOTOR.h>
+#include <stdbool.h>
 #ifndef INC_LIB_DATA_H_
 #define INC_LIB_DATA_H_
 
+extern I2C_HandleTypeDef hi2c1;
 
 void resetDataSend(void);
 void SR(void);
@@ -26,9 +28,14 @@ void ReadFourFloats(float *val1, float *val2, float *val3, float *val4);
 float moving_average_filter(float new_velocity);
 float calculate_pwm(float desired_velocity);
 float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value);
-void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1, float velO2, float velO3, float velO4);
+//void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1, float velO2, float velO3, float velO4);
 
-
+void sendJointState(float pos1, float pos2, float pos3, float pos4,float velO1, float velO2, float velO3, float velO4,float yaw);
+// Function prototypes
+void BNO055_Init(I2C_HandleTypeDef *hi2c);
+void BNO055_Read_Euler_Angles(I2C_HandleTypeDef *hi2c, float *yaw, float *pitch, float *roll);
+bool BNO055_Check_Calibration(I2C_HandleTypeDef *hi2c);
+void readBNO055(void);
 
 
 #endif /* INC_LIB_DATA_H_ */
