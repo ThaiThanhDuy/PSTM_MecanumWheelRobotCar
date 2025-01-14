@@ -35,8 +35,6 @@ int16_t MAX_SPEED = 1000;
 // PID control variables
 
 #define MAX_PWM 1000 // Maximum PWM value
-
-#define k 0.1 // Motor characteristic constant (RPS per PWM)
 // MOTOR
 void Motor_Init(void) {
 
@@ -262,18 +260,6 @@ void stopMode(void) {
 	Motor_Control4(0, 0);
 
 }
-void RESET_ALL(void) {
-	Reset_Encoder1();
-	Reset_Encoder2();
-	Reset_Encoder3();
-	Reset_Encoder4();
-	Motor_Control1(0, 0);
-	Motor_Control2(0, 0);
-	Motor_Control3(0, 0);
-	Motor_Control4(0, 0);
-
-}
-
 // ENCODER
 
 void Encoder_Init(void) {
@@ -321,56 +307,4 @@ void Reset_Encoder4(void) {
 //	printf("Encoder 4 : %i\n", positionMotor4);
 //	HAL_Delay(100);
 //}
-
-// Send data Encoder
-/*void sendDataEncoder(void) {
- sprintf(PM1, "EM1: %i\r\n", positionMotor1);
- HAL_UART_Transmit(&huart2, (uint8_t*) PM1, strlen(PM1), HAL_MAX_DELAY);
- sprintf(PM2, "EM2: %i\r\n", positionMotor2);
- HAL_UART_Transmit(&huart2, (uint8_t*) PM2, strlen(PM2), HAL_MAX_DELAY);
- sprintf(PM3, "EM3: %i\r\n", positionMotor3);
- HAL_UART_Transmit(&huart2, (uint8_t*) PM3, strlen(PM3), HAL_MAX_DELAY);
- sprintf(PM4, "EM4: %i\r\n", positionMotor4);
- HAL_UART_Transmit(&huart2, (uint8_t*) PM4, strlen(PM4), HAL_MAX_DELAY);
- HAL_Delay(1000); // Delay for 1 second
- }*/
-
-
-
-/*void  read(void){
-
- currentTime = HAL_GetTick();  // Current time in milliseconds
- uint32_t deltaTime = currentTime - lastTime;  // Time since last measurement (ms)
-
- // Only proceed if at least 100 ms have passed
-
- // Read the encoder count
- int32_t encoderCount = Read_Encoder1();  // Read the encoder count
-
- // Calculate angular velocity (rad/s)
- int16_t deltaCount = encoderCount - lastEncoderCount; // New pulses
- if (deltaTime > 0) {
- angularVelocity = (double)deltaCount / PPR * M_PI * 2 / (deltaTime / 1000.0);  // rad/s
- } else {
- angularVelocity = 0;  // Avoid division by zero
- }
- angular_velocity_deg_s = angularVelocity * (180.0f / 3.14159f);
-
- // Calculate linear velocity (m/s)
- linearVelocity = angularVelocity * R;
-
- // Calculate position (m)
- position = (double)encoderCount / PPR * C;
- ang += angular_velocity_deg_s;
- // Update values for the next measurement
- lastEncoderCount = encoderCount;
- lastTime = currentTime; // Update lastTime to the current time
-
- if(currentTime>=1215){
- Motor_Control1(0, 0); // time error
- }
-
- controllVel(controlMotor(angularVelocity,0.0,deltaTime ));
- sendJointState(position, 0.0, 0.0, 0.0, angularVelocity, 0.0, 0.0, 0.0);
- }*/
 

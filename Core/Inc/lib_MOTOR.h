@@ -30,7 +30,7 @@ void pivotMode(int Mode);
 void pivotSidewayMode(int Mode);
 void rotateMode(int Mode);
 void stopMode(void);
-void RESET_ALL(void);
+
 void Encoder_Init(void);
 int16_t Read_Encoder1(void);
 int16_t Read_Encoder2(void);

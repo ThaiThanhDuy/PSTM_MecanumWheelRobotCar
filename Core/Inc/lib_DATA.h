@@ -18,24 +18,38 @@
 
 extern I2C_HandleTypeDef hi2c1;
 
-void resetDataSend(void);
-void SR(void);
-void calculateVel1(float velTag, float current_time);
-void reset_system();
-void motor(void);
-void UART_ReceiveString(uint8_t *buffer, size_t length);
-void ReadFourFloats(float *val1, float *val2, float *val3, float *val4);
-float moving_average_filter(float new_velocity);
-float calculate_pwm(float desired_velocity);
-float PID_Controller(float Kp, float Ki, float Kd, float *integral, float last_error, float setpoint, float measured_value);
-//void sendJointState(float pos1, float pos2, float pos3, float pos4, float velO1, float velO2, float velO3, float velO4);
 
-void sendJointState(float pos1, float pos2, float pos3, float pos4,float velO1, float velO2, float velO3, float velO4,float yaw);
-// Function prototypes
+
+
+float moving_average_filter1(float new_velocity);
+float calculate_pwm1(float desired_velocity);
+float PID_Controller1(float Kp, float Ki, float Kd, float *integral,float last_error, float setpoint, float measured_value);
+
+float moving_average_filter2(float new_velocity);
+float calculate_pwm2(float desired_velocity);
+float PID_Controller2(float Kp, float Ki, float Kd, float *integral,float last_error, float setpoint, float measured_value);
+
+float moving_average_filter3(float new_velocity);
+float calculate_pwm3(float desired_velocity);
+float PID_Controller3(float Kp, float Ki, float Kd, float *integral,float last_error, float setpoint, float measured_value);
+
+float moving_average_filter4(float new_velocity);
+float calculate_pwm4(float desired_velocity);
+float PID_Controller4(float Kp, float Ki, float Kd, float *integral,float last_error, float setpoint, float measured_value);
+
+
+void sendJointState(float lx,float ly,float az, float yaw);
+void UART_ReceiveString(uint8_t *buffer, size_t length);
+void ReadFourFloats(float *linearX, float *linearY, float *angularZ);
+
 void BNO055_Init(I2C_HandleTypeDef *hi2c);
 void BNO055_Read_Euler_Angles(I2C_HandleTypeDef *hi2c, float *yaw, float *pitch, float *roll);
-bool BNO055_Check_Calibration(I2C_HandleTypeDef *hi2c);
 void readBNO055(void);
 
+
+void Forward_kinematic_car(float linear_x,float linear_y,float angular_z);
+void Inverse_kinematic_car(float v1, float v2, float v3, float v4);
+
+void motor(void);
 
 #endif /* INC_LIB_DATA_H_ */
