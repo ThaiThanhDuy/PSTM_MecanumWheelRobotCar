@@ -51,5 +51,6 @@ void Forward_kinematic_car(float linear_x,float linear_y,float angular_z);
 void Inverse_kinematic_car(float v1, float v2, float v3, float v4);
 
 void motor(void);
-
+float PID_ControllerV(float Kp, float Ki, float Kd, float *integral,
+		float last_error, float setpoint, float measured_value);
 #endif /* INC_LIB_DATA_H_ */

@@ -139,7 +139,7 @@ void reviceCommand(uint8_t command) {
 		rotateMode(2);
 	}
 	else if (command == 's'){
-		RESET_ALL();
+		//RESET_ALL();
 	}
 
 }

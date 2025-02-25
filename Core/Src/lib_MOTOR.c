@@ -73,6 +73,37 @@ void Motor_Control1(uint8_t direction, uint16_t speed) {
 void Motor_Control2(uint8_t direction, uint16_t speed) {
 
 	if (speed > MAX_SPEED)
+			speed = MAX_SPEED;
+		if (direction == 1) {
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, speed);
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+		} else if (direction == 2) {
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, speed);
+		} else {
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+		}
+}
+void Motor_Control3(uint8_t direction, uint16_t speed) {
+
+
+	if (speed > MAX_SPEED)
+			speed = MAX_SPEED;
+		if (direction == 1) {
+			__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, speed);
+			__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
+		} else if (direction == 2) {
+			__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
+			__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, speed);
+		} else {
+			__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
+			__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
+		}
+}
+void Motor_Control4(uint8_t direction, uint16_t speed) {
+
+	if (speed > MAX_SPEED)
 		speed = MAX_SPEED;
 	if (direction == 1) {
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, speed);
@@ -83,36 +114,6 @@ void Motor_Control2(uint8_t direction, uint16_t speed) {
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
-	}
-}
-void Motor_Control3(uint8_t direction, uint16_t speed) {
-
-	if (speed > MAX_SPEED)
-		speed = MAX_SPEED;
-	if (direction == 1) {
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, speed);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
-	} else if (direction == 2) {
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, speed);
-	} else {
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
-	}
-}
-void Motor_Control4(uint8_t direction, uint16_t speed) {
-
-	if (speed > MAX_SPEED)
-		speed = MAX_SPEED;
-	if (direction == 1) {
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, speed);
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
-	} else if (direction == 2) {
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, speed);
-	} else {
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
 	}
 }
 
@@ -265,8 +266,8 @@ void stopMode(void) {
 void Encoder_Init(void) {
 	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL); // Init Timer 1 -> mode Encoder
 	HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL); // Init Timer 3 -> mode Encoder
-	HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL); // Init Timer 5 -> mode Encoder
-	HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_ALL); // Init Timer 8 -> mode Encoder
+	HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_ALL); // Init Timer 5 -> mode Encoder
+	HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL); // Init Timer 8 -> mode Encoder
 }
 int16_t Read_Encoder1(void) {
 	return __HAL_TIM_GET_COUNTER(&htim1);
@@ -281,25 +282,25 @@ void Reset_Encoder2(void) {
 	__HAL_TIM_SET_COUNTER(&htim3, 0);
 }
 int16_t Read_Encoder3(void) {
-	return __HAL_TIM_GET_COUNTER(&htim5);
-}
-void Reset_Encoder3(void) {
-	__HAL_TIM_SET_COUNTER(&htim5, 0);
-}
-int16_t Read_Encoder4(void) {
 	return __HAL_TIM_GET_COUNTER(&htim8);
 }
-void Reset_Encoder4(void) {
+void Reset_Encoder3(void) {
 	__HAL_TIM_SET_COUNTER(&htim8, 0);
 }
+int16_t Read_Encoder4(void) {
+	return __HAL_TIM_GET_COUNTER(&htim5);
+}
+void Reset_Encoder4(void) {
+	__HAL_TIM_SET_COUNTER(&htim5, 0);
+}
 
-/*void readEncoder(void) {
+void readEncoder(void) {
 	positionMotor1 = Read_Encoder1();
 	positionMotor2 = Read_Encoder2();
 	positionMotor3 = Read_Encoder3();
 	positionMotor4 = Read_Encoder4();
 	HAL_Delay(100);
-}*/
+}
 //void printEncoder(void) {
 //	printf("Encoder 1 : %i\n", positionMotor1);
 //	printf("Encoder 2 : %i\n", positionMotor2);

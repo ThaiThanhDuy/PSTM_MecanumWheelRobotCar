@@ -253,7 +253,7 @@ double rpm1 = 0.0;           // Variable to store calculated RPM
 float vel1 = 0.0;            // Linear velocity (m/s)
 float dia1 = 0.097;          // Diameter in meters
 
-float Kp1 = 0.1;             // Proportional gain
+float Kp1 = 0.14;             // Proportional gain
 float Ki1 = 0.01;            // Integral gain
 float Kd1 = 0.25;            // Derivative gain
 float control_output1;       // Control output for PWM
@@ -523,8 +523,8 @@ void calculateVel2(float velTag2, float current_time2) {
 
 	// Immediate stop if velTag2 is 0
 	if (velTag2 == 0) {
-		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
 		vel2 = 0.0;
 		__HAL_TIM_SET_COUNTER(&htim3, 0);
 		rpm2 = 0.0;
@@ -613,13 +613,13 @@ void calculateVel2(float velTag2, float current_time2) {
 	// Set the PWM duty cycle based on the sign of desired_velocity
 	if (velTag2 > 0) {
 		// Positive velocity
-		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3,
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3,
 				calculate_pwm2(control_output2));
-		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
 	} else if (velTag2 < 0) {
 		// Negative velocity
-		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4,
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4,
 				calculate_pwm2(control_output2));
 
 	}
@@ -714,10 +714,10 @@ void calculateVel3(float velTag3, float current_time3) {
 
 	// Immediate stop if velTag3 is 0
 	if (velTag3 == 0) {
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
 		vel3 = 0.0;
-		__HAL_TIM_SET_COUNTER(&htim5, 0);
+		__HAL_TIM_SET_COUNTER(&htim8, 0);
 		rpm3 = 0.0;
 		control_output3 = 0.0;
 		// Reset variables except angular_position_rad3
@@ -737,7 +737,7 @@ void calculateVel3(float velTag3, float current_time3) {
 	float delta_time3 = current_time3 - last_time3;
 
 	// Read the current pulse count
-	current_pulse_count3 = __HAL_TIM_GET_COUNTER(&htim5);
+	current_pulse_count3 = __HAL_TIM_GET_COUNTER(&htim8);
 	HAL_Delay(10);
 
 	// Calculate the difference in pulse count
@@ -804,14 +804,14 @@ void calculateVel3(float velTag3, float current_time3) {
 	// Set the PWM duty cycle based on the sign of desired_velocity
 	if (velTag3 > 0) {
 		// Positive velocity
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4,
+		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2,
 				calculate_pwm3(control_output3));
 	} else if (velTag3 < 0) {
 		// Negative velocity
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3,
+		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1,
 				calculate_pwm3(control_output3));
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
 	}
 
 	// Update last time and last control output
@@ -904,10 +904,10 @@ void calculateVel4(float velTag4, float current_time4) {
 
 	// Immediate stop if velTag4 is 0
 	if (velTag4 == 0) {
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
 		vel4 = 0.0;
-		__HAL_TIM_SET_COUNTER(&htim8, 0);
+		__HAL_TIM_SET_COUNTER(&htim5, 0);
 		rpm4 = 0.0;
 		control_output4 = 0.0;
 		// Reset variables except angular_position_rad4
@@ -927,7 +927,7 @@ void calculateVel4(float velTag4, float current_time4) {
 	float delta_time4 = current_time4 - last_time4;
 
 	// Read the current pulse count
-	current_pulse_count4 = __HAL_TIM_GET_COUNTER(&htim8);
+	current_pulse_count4 = __HAL_TIM_GET_COUNTER(&htim5);
 	HAL_Delay(10);
 
 	// Calculate the difference in pulse count
@@ -995,14 +995,14 @@ void calculateVel4(float velTag4, float current_time4) {
 	// Set the PWM duty cycle based on the sign of desired_velocity
 	if (velTag4 > 0) {
 		// Positive velocity
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1,
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3,
 				calculate_pwm4(control_output4));
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2, 0);
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);
 
 	} else if (velTag4 < 0) {
 		// Negative velocity
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim9, TIM_CHANNEL_2,
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, 0);
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4,
 				calculate_pwm4(control_output4));
 	}
 
@@ -1012,6 +1012,40 @@ void calculateVel4(float velTag4, float current_time4) {
 }
 
 ///////////////////////////////////////// Controll motor /////////////////////////////////////////
+
+float KpV = 0.15;             // Proportional gain
+float KiV = 0.01;            // Integral gain
+float KdV = 0.25;            // Derivative gain
+float integralV = 0.0;
+float last_errorV =0.0;
+
+float LX_PID =0.0;
+float LY_PID =0.0;
+float AZ_PID =0.0;
+float PID_ControllerV(float Kp, float Ki, float Kd, float *integral,
+		float last_error, float setpoint, float measured_value) {
+	// Calculate the error
+	float errorV = setpoint - measured_value;
+
+	// Update the integral term with clamping to prevent windup
+	*integral += errorV;
+	if (*integral > MAX_INTEGRAL) {
+		*integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+	} else if (*integral < -MAX_INTEGRAL) {
+		*integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
+	}
+
+	// Calculate the derivative term
+	float derivativeV = errorV - last_error;
+
+	// Calculate the output
+	float outputV = (Kp * errorV) + (Ki * (*integral)) + (Kd * derivativeV);
+
+	// Save the last error for next iteration
+	last_error = errorV;
+
+	return outputV; // Return the control output
+}
 
 ///////////////////////////////////////// Caculate velocity car /////////////////////////////////////////
 float wheel_radius = 0.0485;  // Adjust to your robot's wheel radius
@@ -1045,8 +1079,25 @@ void Inverse_kinematic_car(float v1, float v2, float v3, float v4) {
 void motor(void) {
 	ReadFourFloats(&linear_x, &linear_y, &angular_z);
 	readBNO055();
-	Forward_kinematic_car(linear_x, linear_y, angular_z);
-	HAL_Delay(1);
+
+	linear_x =0.54;
+	linear_y =0.0;
+	angular_z =0.0;
+
+	linear_x =linear_x/2.0;
+	linear_y =linear_y/2.0;
+	angular_z = angular_z/2.0;
+
+	Inverse_kinematic_car(realVel1, realVel2, realVel3, realVel4);
+	LX_PID = PID_ControllerV(KpV, KiV, KdV, &integralV,
+			last_errorV, linear_x, linear_x_return);
+	LY_PID = PID_ControllerV(KpV, KiV, KdV, &integralV,
+				last_errorV, linear_y, linear_y_return);
+	AZ_PID = PID_ControllerV(KpV, KiV, KdV, &integralV,
+				last_errorV, angular_z, angular_z_return);
+
+	Forward_kinematic_car(LX_PID, LY_PID, AZ_PID);
+
 	time = get_custom_tick();
 	if (linear_x == 0.0 && linear_y == 0.0 && angular_z == 0.0) {
 		calculateVel1(0.0, time);
@@ -1061,14 +1112,16 @@ void motor(void) {
 		calculateVel2(value2, time);
 		calculateVel3(value3, time);
 		calculateVel4(value4, time);
-		Inverse_kinematic_car(realVel1, realVel2, realVel3, realVel4);
+
 	}
 
-	/*  calculateVel1(0.54, time);
-	 calculateVel2(0.54, time);
-	 calculateVel3(0.54, time);
-	 calculateVel4(0.54, time);*/
-	sendJointState(linear_x_return, linear_y_return, angular_z_return, yaw);
+
+	/*calculateVel1(value1, time);
+	calculateVel2(value2, time);
+    calculateVel3(value3, time);
+	calculateVel4(value4, time);
+*/
+	 sendJointState(linear_x_return, linear_y_return, angular_z_return, yaw);
 	//sendJointState(linear_x_return, 0.0, 0.0, yaw);
 
 }

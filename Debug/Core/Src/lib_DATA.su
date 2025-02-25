@@ -21,6 +21,7 @@
 ../Core/Src/lib_DATA.c:862:7:calculate_pwm4	16	static
 ../Core/Src/lib_DATA.c:870:7:PID_Controller4	56	static
 ../Core/Src/lib_DATA.c:898:6:calculateVel4	48	static
-../Core/Src/lib_DATA.c:1019:6:Forward_kinematic_car	24	static
-../Core/Src/lib_DATA.c:1033:6:Inverse_kinematic_car	24	static
-../Core/Src/lib_DATA.c:1045:6:motor	8	static
+../Core/Src/lib_DATA.c:1025:7:PID_ControllerV	56	static
+../Core/Src/lib_DATA.c:1053:6:Forward_kinematic_car	24	static
+../Core/Src/lib_DATA.c:1067:6:Inverse_kinematic_car	24	static
+../Core/Src/lib_DATA.c:1079:6:motor	8	static
