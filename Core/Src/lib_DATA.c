@@ -26,7 +26,6 @@ extern I2C_HandleTypeDef hi2c1;
 ///////////////////////////////////////// IMU BNO-055 /////////////////////////////////////////
 // BNO055 I2C address
 #define BNO055_ADDRESS 0x28 << 1 // BNO055 I2C address (shifted for HAL)
-
 #define BNO055_CHIP_ID 0x00
 #define BNO055_OPR_MODE 0x3D
 #define BNO055_EULER_H 0x1A
@@ -251,11 +250,11 @@ uint32_t time;
 uint32_t pulse_count1 = 0;  // Variable to store pulse count
 double rpm1 = 0.0;           // Variable to store calculated RPM
 float vel1 = 0.0;            // Linear velocity (m/s)
-float dia1 = 0.097;          // Diameter in meters
+float dia1 = 0.1;          // Diameter in meters
 
-float Kp1 = 0.14;             // Proportional gain
+float Kp1 = 0.1;             // Proportional gain
 float Ki1 = 0.01;            // Integral gain
-float Kd1 = 0.25;            // Derivative gain
+float Kd1 = 0.15;            // Derivative gain
 float control_output1;       // Control output for PWM
 float integral1_1 = 0.0;      // Integral term for PID
 float last_error1 = 0.0;     // Last error for PID
@@ -367,7 +366,7 @@ void calculateVel1(float velTag1, float current_time1) {
 
 	// Limit RPM to the range [0, 250]
 	rpm1 = fmax(0.0, fmin(250.0, rpm1));
-	// Calculate linear velocity (m/s)
+	// Calculate linear velocity (m/s) v=w*dia
 	float new_vel1;
 	if (pulse_difference1 < 0) {
 		new_vel1 = -((rpm1 / 60.0) * dia1 * M_PI); // Negative velocity for reverse direction
@@ -383,7 +382,7 @@ void calculateVel1(float velTag1, float current_time1) {
 	distance_traveled1 += vel1 * (delta_time1 / 1000.0); // Linear distance traveled in meters
 	angular_position_rad1 += distance_traveled1 / (dia1 / 2.0); // Update angular position in radians
 	angular_position_deg1 = angular_position_rad1 * (180.0 / M_PI); // Convert to degrees
-
+	angular_position_deg1 = fmod(angular_position_deg1, 360.0);
 	// Kalman filter update
 	estimate1 = estimate1; // Predicted state (previous estimate)
 	error_covariance1 += process_noise1; // Update error covariance
@@ -399,10 +398,7 @@ void calculateVel1(float velTag1, float current_time1) {
 
 	// Implement ramping to control output
 	if (fabs(control_output1 - last_control_output1) > RAMP_RATE) {
-		control_output1 = last_control_output1
-				+ (control_output1 > last_control_output1 ?
-				RAMP_RATE :
-															-RAMP_RATE);
+		control_output1 = last_control_output1+ (control_output1 > last_control_output1 ?RAMP_RATE :-RAMP_RATE);
 	}
 
 	// Implement hysteresis to prevent rapid switching
@@ -442,10 +438,10 @@ void calculateVel1(float velTag1, float current_time1) {
 uint32_t pulse_count2 = 0;  // Variable to store pulse count
 double rpm2 = 0.0;           // Variable to store calculated RPM
 float vel2 = 0.0;            // Linear velocity (m/s)
-float dia2 = 0.097;          // Diameter in meters
+float dia2 = 0.1;          // Diameter in meters
 
 float Kp2 = 0.15;             // Proportional gain
-float Ki2 = 0.01;            // Integral gain
+float Ki2 = 0.013;            // Integral gain
 float Kd2 = 0.25;            // Derivative gain
 float control_output2;       // Control output for PWM
 float integral1_2 = 0.0;      // Integral term for PID
@@ -573,7 +569,7 @@ void calculateVel2(float velTag2, float current_time2) {
 	distance_traveled2 += vel2 * (delta_time2 / 1000.0); // Linear distance traveled in meters
 	angular_position_rad2 += distance_traveled2 / (dia2 / 2.0); // Update angular position in radians
 	angular_position_deg2 = angular_position_rad2 * (180.0 / M_PI); // Convert to degrees
-
+	angular_position_deg2 = fmod(angular_position_deg2, 360.0);
 	// Kalman filter update
 	estimate2 = estimate2; // Predicted state (previous estimate)
 	error_covariance2 += process_noise2; // Update error covariance
@@ -633,7 +629,7 @@ void calculateVel2(float velTag2, float current_time2) {
 uint32_t pulse_count3 = 0;  // Variable to store pulse count
 double rpm3 = 0.0;           // Variable to store calculated RPM
 float vel3 = 0.0;            // Linear velocity (m/s)
-float dia3 = 0.097;          // Diameter in meters
+float dia3 = 0.1;          // Diameter in meters
 
 float Kp3 = 0.15;             // Proportional gain
 float Ki3 = 0.01;            // Integral gain
@@ -764,7 +760,7 @@ void calculateVel3(float velTag3, float current_time3) {
 	distance_traveled3 += vel3 * (delta_time3 / 1000.0); // Linear distance traveled in meters
 	angular_position_rad3 += distance_traveled3 / (dia3 / 2.0); // Update angular position in radians
 	angular_position_deg3 = angular_position_rad3 * (180.0 / M_PI); // Convert to degrees
-
+	angular_position_deg3 = fmod(angular_position_deg3, 360.0);
 	// Kalman filter update
 	estimate3 = estimate3; // Predicted state (previous estimate)
 	error_covariance3 += process_noise3; // Update error covariance
@@ -823,7 +819,7 @@ void calculateVel3(float velTag3, float current_time3) {
 uint32_t pulse_count4 = 0;  // Variable to store pulse count
 double rpm4 = 0.0;           // Variable to store calculated RPM
 float vel4 = 0.0;            // Linear velocity (m/s)
-float dia4 = 0.097;          // Diameter in meters
+float dia4 = 0.1;          // Diameter in meters
 
 float Kp4 = 0.15;             // Proportional gain
 float Ki4 = 0.01;            // Integral gain
@@ -955,7 +951,7 @@ void calculateVel4(float velTag4, float current_time4) {
 	distance_traveled4 += vel4 * (delta_time4 / 1000.0); // Linear distance traveled in meters
 	angular_position_rad4 += distance_traveled4 / (dia4 / 2.0); // Update angular position in radians
 	angular_position_deg4 = angular_position_rad4 * (180.0 / M_PI); // Convert to degrees
-
+	angular_position_deg4 = fmod(angular_position_deg4, 360.0);
 	// Kalman filter update
 	estimate4 = estimate4; // Predicted state (previous estimate)
 	error_covariance4 += process_noise4; // Update error covariance
@@ -1013,7 +1009,7 @@ void calculateVel4(float velTag4, float current_time4) {
 
 ///////////////////////////////////////// Controll motor /////////////////////////////////////////
 
-float KpV = 0.15;             // Proportional gain
+float KpV = 0.13;             // Proportional gain
 float KiV = 0.01;            // Integral gain
 float KdV = 0.25;            // Derivative gain
 float integralV = 0.0;
@@ -1022,7 +1018,7 @@ float last_errorV =0.0;
 float LX_PID =0.0;
 float LY_PID =0.0;
 float AZ_PID =0.0;
-float PID_ControllerV(float Kp, float Ki, float Kd, float *integral,
+float PID_ControllerX(float Kp, float Ki, float Kd, float *integral,
 		float last_error, float setpoint, float measured_value) {
 	// Calculate the error
 	float errorV = setpoint - measured_value;
@@ -1047,14 +1043,68 @@ float PID_ControllerV(float Kp, float Ki, float Kd, float *integral,
 	return outputV; // Return the control output
 }
 
+float PID_ControllerY(float Kp, float Ki, float Kd, float *integral,
+		float last_error, float setpoint, float measured_value) {
+	// Calculate the error
+	float errorV = setpoint - measured_value;
+
+	// Update the integral term with clamping to prevent windup
+	*integral += errorV;
+	if (*integral > MAX_INTEGRAL) {
+		*integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+	} else if (*integral < -MAX_INTEGRAL) {
+		*integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
+	}
+
+	// Calculate the derivative term
+	float derivativeV = errorV - last_error;
+
+	// Calculate the output
+	float outputV = (Kp * errorV) + (Ki * (*integral)) + (Kd * derivativeV);
+
+	// Save the last error for next iteration
+	last_error = errorV;
+
+	return outputV; // Return the control output
+}
+float PID_ControllerZ(float Kp, float Ki, float Kd, float *integral,
+		float last_error, float setpoint, float measured_value) {
+	// Calculate the error
+	float errorV = setpoint - measured_value;
+
+	// Update the integral term with clamping to prevent windup
+	*integral += errorV;
+	if (*integral > MAX_INTEGRAL) {
+		*integral = MAX_INTEGRAL; // Clamp integral to prevent windup
+	} else if (*integral < -MAX_INTEGRAL) {
+		*integral = -MAX_INTEGRAL; // Clamp integral to prevent windup
+	}
+
+	// Calculate the derivative term
+	float derivativeV = errorV - last_error;
+
+	// Calculate the output
+	float outputV = (Kp * errorV) + (Ki * (*integral)) + (Kd * derivativeV);
+
+	// Save the last error for next iteration
+	last_error = errorV;
+
+	return outputV; // Return the control output
+}
 ///////////////////////////////////////// Caculate velocity car /////////////////////////////////////////
-float wheel_radius = 0.0485;  // Adjust to your robot's wheel radius
-float wheel_base = 0.38;    // Distance between front and rear wheels
+float wheel_radius = 0.05;  // Adjust to your robot's wheel radius
+float wheel_base = 0.28;    // Distance between front and rear wheels
+float CenterToWheelX=0.13;
+float CenterToWheelY=0.21;
 void Forward_kinematic_car(float linear_x, float linear_y, float angular_z) {
-	value1 = (linear_x - linear_y - (wheel_base * angular_z / 2));
+	/*value1 = (linear_x - linear_y - (wheel_base * angular_z / 2));
 	value2 = (linear_x + linear_y + (wheel_base * angular_z / 2));
 	value3 = (linear_x + linear_y - (wheel_base * angular_z / 2));
-	value4 = (linear_x - linear_y + (wheel_base * angular_z / 2));
+	value4 = (linear_x - linear_y + (wheel_base * angular_z / 2));*/
+	value1 = (linear_x - linear_y - ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
+	value2 = (linear_x + linear_y + ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
+	value3 = (linear_x + linear_y - ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
+	value4 = (linear_x - linear_y + ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
 
 	value1 = value1 * 2.0;
 	value2 = value2 * 2.0;
@@ -1065,13 +1115,16 @@ float linear_x_return = 0.0;
 float linear_y_return = 0.0;
 float angular_z_return = 0.0;
 void Inverse_kinematic_car(float v1, float v2, float v3, float v4) {
-	linear_x_return = (v1 + v2 + v3 + v4) / (4 * wheel_radius);
-	linear_y_return = (-v1 + v2 + v3 - v4) / (4 * wheel_radius);
-	angular_z_return = (-v1 + v2 - v3 + v4) / (4 * 0.1475);
+	linear_x_return = (v1 + v2 + v3 + v4) * ( wheel_radius/4);//Longitudinal Velocity
+	linear_y_return = (-v1 + v2 + v3 - v4) * ( wheel_radius/4); //Transversal Velocity
+	angular_z_return = (-v1 + v2 - v3 + v4) * ( wheel_radius/4*(CenterToWheelX+CenterToWheelY));//Angular velocity:
 
-	linear_x_return  = (linear_x_return/2.0)/10.0;
+/*	linear_x_return  = (linear_x_return/2.0)/10.0;
 	linear_y_return  = (linear_y_return/2.0)/10.0;
-	angular_z_return  = (angular_z_return/2.0)/10.0;
+	angular_z_return  = (angular_z_return/2.0)/10.0;*/
+	linear_x_return  = (linear_x_return/2.0)*10.0;
+	linear_y_return  = (linear_y_return/2.0)*10.0;
+	angular_z_return  = (angular_z_return/2.0)*10.0;
 }
 
 ///////////////////////////////////////// Caculate velocity car /////////////////////////////////////////
@@ -1080,7 +1133,7 @@ void motor(void) {
 	ReadFourFloats(&linear_x, &linear_y, &angular_z);
 	readBNO055();
 
-	linear_x =0.54;
+	linear_x =0.20;
 	linear_y =0.0;
 	angular_z =0.0;
 
@@ -1089,12 +1142,20 @@ void motor(void) {
 	angular_z = angular_z/2.0;
 
 	Inverse_kinematic_car(realVel1, realVel2, realVel3, realVel4);
-	LX_PID = PID_ControllerV(KpV, KiV, KdV, &integralV,
-			last_errorV, linear_x, linear_x_return);
-	LY_PID = PID_ControllerV(KpV, KiV, KdV, &integralV,
-				last_errorV, linear_y, linear_y_return);
-	AZ_PID = PID_ControllerV(KpV, KiV, KdV, &integralV,
-				last_errorV, angular_z, angular_z_return);
+
+	if(linear_x != 0.0 && linear_y==0.0 && angular_z==0.0){
+		LX_PID = PID_ControllerX(KpV, KiV, KdV, &integralV,
+					last_errorV, linear_x, linear_x_return);
+	}
+	if(linear_x == 0.0  && linear_y!=0.0 && angular_z==0.0){
+		LY_PID = PID_ControllerY(KpV, KiV, KdV, &integralV,
+						last_errorV, linear_y, linear_y_return);
+	}
+	if(linear_x == 0.0  && linear_y==0.0 && angular_z!=0.0){
+		AZ_PID = PID_ControllerZ(KpV, KiV, KdV, &integralV,
+					last_errorV, angular_z, angular_z_return);
+	}
+
 
 	Forward_kinematic_car(LX_PID, LY_PID, AZ_PID);
 
