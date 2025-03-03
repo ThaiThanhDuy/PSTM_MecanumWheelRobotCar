@@ -116,11 +116,7 @@ void readBNO055(void) {
 	qy_filtered = q_alpha * qy + (1 - q_alpha) * qy_filtered;
 	qz_filtered = q_alpha * qz + (1 - q_alpha) * qz_filtered;
 	qw_filtered = q_alpha * qw + (1 - q_alpha) * qw_filtered;
-	// Output the filtered values and quaternion
-	/* printf("Filtered Yaw: %.2f\n", yaw_filtered);
-	 printf("Filtered Roll: %.2f\n", roll_filtered);
-	 printf("Filtered Pitch: %.2f\n", pitch_filtered);
-	 printf("Quaternion: qx: %.4f, qy: %.4f, qz: %.4f, qw: %.4f\n", qx, qy, qz, qw);*/
+
 }
 ///////////////////////////////////////// IMU BNO-055 /////////////////////////////////////////
 
@@ -133,11 +129,11 @@ float value1, value2, value3, value4;
 
 /// SEND DATA
 
-void sendJointState(float lx, float ly, float az, float yaw) {
+void sendJointState(float lx, float ly, float az, float yaw,float p1,float p2,float p3,float p4) {
 
 	// Format the joint state message into the buffer
-	snprintf(txBuffer, sizeof(txBuffer), "x:%.2f y:%.2f z:%.2f o:%.2f\n", lx,
-			ly, az, yaw);
+	snprintf(txBuffer, sizeof(txBuffer), "x:%.2f y:%.2f z:%.2f o:%.2f a:%.2f b:%.2f c:%.2f d:%.2f \n",
+			lx,ly, az, yaw,p1 ,p2 ,p3 ,p4);
 
 	// Transmit the complete message over UART
 	HAL_UART_Transmit(&huart2, (uint8_t*) txBuffer, strlen(txBuffer),
@@ -1009,7 +1005,7 @@ void calculateVel4(float velTag4, float current_time4) {
 
 ///////////////////////////////////////// Controll motor /////////////////////////////////////////
 
-float KpV = 0.13;             // Proportional gain
+float KpV = 0.15;             // Proportional gain
 float KiV = 0.01;            // Integral gain
 float KdV = 0.25;            // Derivative gain
 float integralV = 0.0;
@@ -1094,17 +1090,17 @@ float PID_ControllerZ(float Kp, float Ki, float Kd, float *integral,
 ///////////////////////////////////////// Caculate velocity car /////////////////////////////////////////
 float wheel_radius = 0.05;  // Adjust to your robot's wheel radius
 float wheel_base = 0.28;    // Distance between front and rear wheels
-float CenterToWheelX=0.13;
-float CenterToWheelY=0.21;
+float dx=0.13;
+float dy=0.21;
 void Forward_kinematic_car(float linear_x, float linear_y, float angular_z) {
 	/*value1 = (linear_x - linear_y - (wheel_base * angular_z / 2));
 	value2 = (linear_x + linear_y + (wheel_base * angular_z / 2));
 	value3 = (linear_x + linear_y - (wheel_base * angular_z / 2));
 	value4 = (linear_x - linear_y + (wheel_base * angular_z / 2));*/
-	value1 = (linear_x - linear_y - ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
-	value2 = (linear_x + linear_y + ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
-	value3 = (linear_x + linear_y - ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
-	value4 = (linear_x - linear_y + ((CenterToWheelX+CenterToWheelY) * angular_z)/wheel_radius);
+	value1 = (linear_x - linear_y - ((dx+dy) * angular_z)/wheel_radius);
+	value2 = (linear_x + linear_y + ((dx+dy) * angular_z)/wheel_radius);
+	value3 = (linear_x + linear_y - ((dx+dy) * angular_z)/wheel_radius);
+	value4 = (linear_x - linear_y + ((dx+dy) * angular_z)/wheel_radius);
 
 	value1 = value1 * 2.0;
 	value2 = value2 * 2.0;
@@ -1117,14 +1113,11 @@ float angular_z_return = 0.0;
 void Inverse_kinematic_car(float v1, float v2, float v3, float v4) {
 	linear_x_return = (v1 + v2 + v3 + v4) * ( wheel_radius/4);//Longitudinal Velocity
 	linear_y_return = (-v1 + v2 + v3 - v4) * ( wheel_radius/4); //Transversal Velocity
-	angular_z_return = (-v1 + v2 - v3 + v4) * ( wheel_radius/4*(CenterToWheelX+CenterToWheelY));//Angular velocity:
+	angular_z_return = (-v1 + v2 - v3 + v4) * ( wheel_radius/4*(dx+dy));//Angular velocity:
 
-/*	linear_x_return  = (linear_x_return/2.0)/10.0;
-	linear_y_return  = (linear_y_return/2.0)/10.0;
-	angular_z_return  = (angular_z_return/2.0)/10.0;*/
-	linear_x_return  = (linear_x_return/2.0)*10.0;
-	linear_y_return  = (linear_y_return/2.0)*10.0;
-	angular_z_return  = (angular_z_return/2.0)*10.0;
+	linear_x_return  = (linear_x_return)*10.0;
+	linear_y_return  = (linear_y_return)*10.0;
+	angular_z_return  = (angular_z_return)*10.0;
 }
 
 ///////////////////////////////////////// Caculate velocity car /////////////////////////////////////////
@@ -1133,48 +1126,44 @@ void motor(void) {
 	ReadFourFloats(&linear_x, &linear_y, &angular_z);
 	readBNO055();
 
-	linear_x =0.20;
+/*	linear_x =0.2;
 	linear_y =0.0;
-	angular_z =0.0;
+	angular_z =0.0;*/
 
-	linear_x =linear_x/2.0;
+/*	linear_x =linear_x/2.0;
 	linear_y =linear_y/2.0;
-	angular_z = angular_z/2.0;
+	angular_z = angular_z/2.0;*/
 
 	Inverse_kinematic_car(realVel1, realVel2, realVel3, realVel4);
 
-	if(linear_x != 0.0 && linear_y==0.0 && angular_z==0.0){
-		LX_PID = PID_ControllerX(KpV, KiV, KdV, &integralV,
-					last_errorV, linear_x, linear_x_return);
-	}
-	if(linear_x == 0.0  && linear_y!=0.0 && angular_z==0.0){
-		LY_PID = PID_ControllerY(KpV, KiV, KdV, &integralV,
-						last_errorV, linear_y, linear_y_return);
-	}
-	if(linear_x == 0.0  && linear_y==0.0 && angular_z!=0.0){
-		AZ_PID = PID_ControllerZ(KpV, KiV, KdV, &integralV,
-					last_errorV, angular_z, angular_z_return);
+	if(linear_x!=0){
+		LX_PID = PID_ControllerX(KpV, KiV, KdV, &integralV,last_errorV, linear_x, linear_x_return);
 	}
 
+	if(linear_y!=0.0){
+		LY_PID = PID_ControllerY(KpV, KiV, KdV, &integralV,last_errorV, linear_y, linear_y_return);
+	}
+	if(angular_z!=0.0){
+		AZ_PID = PID_ControllerZ(KpV, KiV, KdV, &integralV,last_errorV, angular_z, angular_z_return);
+	}
 
+	if(linear_x ==0){
+		LX_PID =0.0;
+	}
+	if(linear_y ==0){
+		LY_PID =0.0;
+	}
+	if(angular_z ==0){
+		AZ_PID =0.0;
+	}
 	Forward_kinematic_car(LX_PID, LY_PID, AZ_PID);
 
 	time = get_custom_tick();
-	if (linear_x == 0.0 && linear_y == 0.0 && angular_z == 0.0) {
-		calculateVel1(0.0, time);
-		calculateVel2(0.0, time);
-		calculateVel3(0.0, time);
-		calculateVel4(0.0, time);
-		linear_x_return = 0.0;
-		linear_y_return = 0.0;
-		angular_z_return = 0.0;
-	} else {
-		calculateVel1(value1, time);
-		calculateVel2(value2, time);
-		calculateVel3(value3, time);
-		calculateVel4(value4, time);
 
-	}
+	calculateVel1(value1, time);
+	calculateVel2(value2, time);
+	calculateVel3(value3, time);
+	calculateVel4(value4, time);
 
 
 	/*calculateVel1(value1, time);
@@ -1182,7 +1171,7 @@ void motor(void) {
     calculateVel3(value3, time);
 	calculateVel4(value4, time);
 */
-	 sendJointState(linear_x_return, linear_y_return, angular_z_return, yaw);
-	//sendJointState(linear_x_return, 0.0, 0.0, yaw);
+	 sendJointState(linear_x_return, linear_y_return, angular_z_return, yaw,angular_position_deg1,angular_position_deg2,angular_position_deg3,angular_position_deg4);
+
 
 }

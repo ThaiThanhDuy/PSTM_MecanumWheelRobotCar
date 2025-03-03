@@ -38,7 +38,8 @@ float calculate_pwm4(float desired_velocity);
 float PID_Controller4(float Kp, float Ki, float Kd, float *integral,float last_error, float setpoint, float measured_value);
 
 
-void sendJointState(float lx,float ly,float az, float yaw);
+//void sendJointState(float lx,float ly,float az, float yaw);
+void sendJointState(float lx, float ly, float az, float yaw,float p1,float p2,float p3,float p4);
 void UART_ReceiveString(uint8_t *buffer, size_t length);
 void ReadFourFloats(float *linearX, float *linearY, float *angularZ);
 
